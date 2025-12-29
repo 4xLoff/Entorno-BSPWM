@@ -16,14 +16,14 @@ bspc rule -a mplayer2 state=floating
 bspc rule -a Kupfer.py focus=on
 bspc rule -a Screenkey manage=off
 cleartarget
-#ProveVideoWallpaper
+# Prove Video Wallpaper
 #/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
 /usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
-~/.config/polybar/launch4.sh 
+~/.config/polybar/launch.sh 
 /usr/local/bin/picom --config ~/.config/picom/picom.conf
 /usr/bin/bspc config focus_follows_pointer true
 /usr/local/bin/picom --experimental-backends &
-#FixBurpsuite
+# Fix Burpsuite
 /usr/bin/wmname LG3D &    
 /usr/bin/bspc config border_width 0
 /usr/bin/xsetroot -cursor_name left_ptr &
