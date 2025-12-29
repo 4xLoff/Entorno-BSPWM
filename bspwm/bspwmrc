@@ -17,14 +17,14 @@ bspc rule -a Kupfer.py focus=on
 bspc rule -a Screenkey manage=off
 cleartarget
 #ProveVideoWallpaper
-#/opt/foo-Wallpaper-Feh-Gif/back4.sh auto /home/axel/Imágenes/rickmorty.gif &
-feh --bg-fill ~/Pictures/3.png
-~/.config/polybar/launch.sh --forest 
-picom --config ~/.config/picom/picom.conf
-bspc config focus_follows_pointer true
-picom --experimental-backends &
+#/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
+/usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
+~/.config/polybar/launch4.sh 
+/usr/local/bin/picom --config ~/.config/picom/picom.conf
+/usr/bin/bspc config focus_follows_pointer true
+/usr/local/bin/picom --experimental-backends &
 #FixBurpsuite
-wmname LG3D &    
-bspc config border_width 0
-xsetroot -cursor_name left_ptr &
+/usr/bin/wmname LG3D &    
+/usr/bin/bspc config border_width 0
+/usr/bin/xsetroot -cursor_name left_ptr &
 
