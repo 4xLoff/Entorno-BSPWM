@@ -283,7 +283,7 @@ function check_os() {
         
         # Librerías gráficas
         libgl libxcursor libxext libxi libxinerama 
-        libxkbcommon-x11 libxrandr mesa
+        libxkbcommon-x11 libxrandr mesa python-sphinx
         
         # Compositor
         picom
