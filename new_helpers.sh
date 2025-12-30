@@ -128,7 +128,9 @@ trap ctrl_c SIGINT
 # Función chequea la distribucion donde se va a instalar en entorno
 
 function check_os() {
-    # Usando $(printf "%b\n") para generar el prompt con colores
+    # Entorno a uasr
+    read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
+    # Creamos directorios de trabajo
     sudo -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
     sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
     cd "${INSTALL_DIR}"
@@ -222,7 +224,6 @@ function check_os() {
         cd "${INSTALL_DIR}"
 
         # Clone repos bspwm and sxhkdrc 
-        
         sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
         sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
@@ -370,6 +371,33 @@ function check_os() {
         sudo -u "${SUDO_USER}" makepkg -si --noconfirm
         sudo pacman -Syu --overwrite '*' --noconfirm
 
+        printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
+        cd "${INSTALL_DIR}"
+
+        # Clone repos bspwm and sxhkdrc 
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        cd "${INSTALL_DIR}/bspwm/"
+        make
+        sudo make install
+        cd "${INSTALL_DIR}/sxhkd/"
+        make
+        sudo make install 
+
+        # Configuration polybar
+        printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
+        cd "${INSTALL_DIR}"
+        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        cd "${INSTALL_DIR}/blue-sky/polybar/"
+        sudo -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
+
+        # Copiar fuentes
+        cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
+        sudo mkdir -p /usr/share/fonts/truetype
+        sudo cp * /usr/share/fonts/truetype/
+        pushd /usr/share/fonts/truetype &>/dev/null 
+        fc-cache -v
+        popd &>/dev/null 
         # Compilation polybar Arch Linux
         printf "%b\n" "${greenColour}${rev}Creating swap and compiling Polybar for Arch Linux .${endColour}"
         sleep 5
@@ -416,6 +444,7 @@ function bspwm_enviroment() {
   sudo chmod +x "${USER_HOME}/.config/polybar/launch.sh"
   sudo chmod +x "${USER_HOME}/.config/picom/picom.conf"
   sudo chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
+  sudo ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
 
   # Install powerlevel10k
   printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
@@ -488,9 +517,7 @@ function bspwm_enviroment() {
   sudo git clone https://github.com/NvChad/starter /root/.config/nvim && nvim --headless '+Lazy! sync' +qa
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "/root/.config/nvim/init.lua"
-  sudo ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
-  
-  read -rp "$(printf "%b" "${yellowColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
+
   case "${entorno,,}" in
     si|y|yes|yey)
       printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
