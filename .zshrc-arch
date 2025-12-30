@@ -151,8 +151,8 @@ function settarget(){
 
 # Define the cleartarget function
 function cleartarget(){
-  echo Null > /tmp/target
-  echo Null > /tmp/name
+  sh -c ': > /tmp/target'
+  sh -c ': > /tmp/name'
 }
 
 # Execute the cleartarget function only if it has not been executed before
