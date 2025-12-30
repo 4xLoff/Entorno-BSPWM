@@ -37,7 +37,15 @@ endColour=$(tput sgr0)
 
 # Modos seguro
 
-set -euo pipefail
+#set -euo pipefail
+
+# Constantes Globales
+
+USER_HOME="/home/${SUDO_USER:-}"
+INSTALL_DIR="${USER_HOME}/Install_BSPWM"
+OPT_DIR="/opt"
+
+# Variables Globales
 
 # Evitar notificaciones molestas por pantalla
 
@@ -59,7 +67,6 @@ function helpPanel() {
     printf "%b\n" "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary       =< 60 gb.${endColour}"
     printf "%b\n" "\t${yellowColour}Opcionales:${endColour}"
     printf "%b\n" "\t\t${yellowColour}-c${endColour}\t\t\t${greenColour}${rev}Core Tools 270.${endColour}"
-
     printf "%b\n" "\t\t${yellowColour}-r${endColour}\t\t\t${greenColour}${rev}Tools Repositories (Tools for OSCP) nesesary =< 160 gb.${endColour}"
     printf "%b\n" "\t\t${yellowColour}-l${endColour}\t\t\t${greenColour}${rev}LaTeX Environment (It tackes 30 min more)${endColour}"
     printf "%b\n" "\t\t${yellowColour}-s${endColour}\t\t\t${greenColour}${rev}Spotify (Only Recomended for more than 16 gb of RAM, the demon use 1 gb of RAM)(Only theme Forest)${endColour}"
@@ -94,13 +101,6 @@ check_sudo() {
   fi
 }
 
-# Constantes Globales
-
-USER_HOME="/home/${SUDO_USER}"
-INSTALL_DIR="${USER_HOME}/Install_BSPWM"
-OPT_DIR="/opt"
-
-# Variables Globales
 
 # Función para salir con ctrl_c 2 veces
 
@@ -258,7 +258,7 @@ function check_os() {
         sudo ninja -C build install 
 
         # Polybar Compilation
-        printf "%b\n" "${yellowColour}${rev}Polybar compilation.${endColour}"
+        printf "%b\n" "${greenColour}${rev}Polybar compilation.${endColour}"
         cd "${INSTALL_DIR}"
         sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
@@ -377,7 +377,6 @@ function check_os() {
         sudo chmod 600 /swapfile
         sudo mkswap /swapfile
         sudo swapon /swapfile
-        cd "${INSTALL_DIR}"
         printf "%b\n" "${redColour}${grisBg}${bold}If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
         sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
