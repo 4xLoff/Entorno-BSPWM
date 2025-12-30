@@ -129,8 +129,6 @@ trap ctrl_c SIGINT
 
 function check_os() {
     # Usando $(printf "%b\n") para generar el prompt con colores
-    printf "%b\n" "${magentaColour}${rev}¿Quieres instalar en Entorno BSPWN de ${endColour}${magentaColour}${grisBg}${bold}s4vitar?${endColour}${magentaColour}${rev} (si|y|yes|yey): ${endColour}"
-    read entorno
     sudo -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
     sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
     cd "${INSTALL_DIR}"
@@ -466,6 +464,12 @@ function bspwm_enviroment() {
 
   # Install NvChad 
   printf "%b\n" "${greenColour}${rev}Install nvcahd.${endColour}"
+  sudo apt remove --purge codium -y
+  sudo apt remove --purge vi -y
+  sudo apt remove --purge vim -y
+  sudo apt remove --purge vin -y
+  sudo apt remove --purge nvim -y
+  sudo apt remove --purge neovim -y 
   cd "${INSTALL_DIR}" 
   # 1. Descargar el tarball oficial
   sudo wget -q https://github.com/neovim/neovim/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
@@ -486,6 +490,8 @@ function bspwm_enviroment() {
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "/root/.config/nvim/init.lua"
   sudo ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
+  
+  read -rp "$(printf "%b" "${yellowColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
   case "${entorno,,}" in
     si|y|yes|yey)
       printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
@@ -495,9 +501,9 @@ function bspwm_enviroment() {
       sudo chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
       sudo chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
       sudo chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      sudo -u "${SUDO_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' ~/.config/bspwm/bspwmrc
+      sudo -u "${SUDO_USER}" sed -i 's|̣̣~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
     ;;
-    n|no|nay)
+    ""|n|no|nay)
       printf "%b\n" "${greenColour}${rev}Install themes polybar.${endColour}"
       cd "${INSTALL_DIR}"
       sudo git clone https://github.com/adi1090x/polybar-themes.git
@@ -538,12 +544,6 @@ function bspwm_enviroment() {
 function update_debian() {
     printf "%b\n" "${greenColour}${rev}Installing additional packages for the correct functioning of the environment.${endColour}"
     cd "${INSTALL_DIR}"
-    sudo apt remove --purge codium -y
-    sudo apt remove --purge vi -y
-    sudo apt remove --purge vim -y
-    sudo apt remove --purge vin -y
-    sudo apt remove --purge nvim -y
-    sudo apt remove --purge neovim -y 
     sudo apt remove --purge python3-unicodecsv -y
     sudo apt remove --purge burpsuite -y
 
@@ -1206,7 +1206,7 @@ function repositories(){
     printf "%b\n" "${greenColour}${rev}Install wifiphisher.${endColour}"
     cd "${OPT_DIR}"
     git clone https://github.com/wifiphisher/wifiphisher.git # Download the latest revision
-    cd wifiphisher # Switch to tool's directory
+    cd wifiphisher 
     sudo python setup.py install # Install any dependencies
 
     printf "%b\n" "${greenColour}${rev}Install wifite2.${endColour}"
@@ -1447,7 +1447,7 @@ shift $((OPTIND - 1))
 
 # Verificar si hay argumentos adicionales no permitidos
 
-if [[ -z "$Mode" ]]; then 
+if [[ -z "${Mode:-}" ]]; then 
   printf "%s\n" "${redColour}${rev}[x] Faltan opciones obligatorias.${endColour}"
   helpPanel
 fi 
