@@ -165,7 +165,7 @@ function check_os() {
         libxcb-damage0-dev libxcb-glx0-dev
         libxcb-present-dev libxcb-render0-dev
         libxcb-render-util0-dev libxcb-xfixes0-dev
-        libxcb-xkb-dev libxcb-xrm-dev
+        libxcb-xkb-dev libxcb-xrm-dev python-sphinx
         
         # Características opcionales Polybar
         libasound2-dev libpulse-dev libjsoncpp-dev
@@ -208,9 +208,9 @@ function check_os() {
 
         for package in "${packages_bspwm_debian[@]}"; do
           if sudo apt-get install "${APT_FLAGS[@]}" "${package}"; then
-              printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold}${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
+              printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
           else
-              printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold}${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
+              printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
           fi
         done  
 
@@ -343,9 +343,9 @@ function check_os() {
 
         for package in "${packages_bspwm_arch[@]}"; do
           if sudo pacman -S "${package}" --noconfirm --needed ; then
-              printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold}${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
+              printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
           else
-              printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold}${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
+              printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
           fi
         done     
 
@@ -408,6 +408,7 @@ function check_os() {
         printf "%b\n" "${redColour}${grisBg}${bold}If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
         sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
+        rm -rf build
         mkdir build
         cd build/
         sleep 5
@@ -691,9 +692,9 @@ function update_debian() {
 
     for package in "${packages_tools_debian[@]}"; do
       if sudo apt-get install "${APT_FLAGS[@]}" "${package}"; then
-          printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold}${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
+          printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
       else
-          printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold}${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
+          printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
       fi
     done
     
@@ -777,7 +778,7 @@ function update_arch(){
     gcc-multilib emacs geany
     
     # Desarrollo - Python
-    python-gobject python-ldap python-sphinx
+    python-gobject python-ldap
     
     # Redes y conectividad
     cifs-utils freerdp inetutils irssi 
@@ -808,9 +809,9 @@ function update_arch(){
 
     for package in "${packages_tools_arch[@]}"; do
       if sudo pacman -S "${package}" --noconfirm --needed ; then
-    printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold}${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
+    printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
       else
-          printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold}${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
+          printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
       fi
     done 
     
