@@ -112,7 +112,7 @@ ctrl_c() {
     printf "%b\n" "\n${redColour}${rev}[!] Exiting...${endColour}"
     tput cnorm
     [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && sudo rm -rf "${INSTALL_DIR:?}"/*
-    sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec rm -rf {} \; 2>/dev/null 
+    find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec rm -rf {} \; 2>/dev/null 
     set +e
     exit 1
   fi
@@ -130,9 +130,10 @@ trap ctrl_c SIGINT
 function check_os() {
     # Entorno a uasr
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
+    
     # Creamos directorios de trabajo
-    sudo -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
-    sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
+    runuser -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
+    runuser find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
     cd "${INSTALL_DIR}"
     if [[ ! -f /etc/os-release ]]; then 
        printf "%b\n" "\n${redColour}${rev}The system is not permitive${endColour}"    
@@ -143,7 +144,13 @@ function check_os() {
       kali|parrot|ubuntu|debian)
         printf "%b\n" "\n${greenColour}${grisBg}${bold}The system is Debian${endColour}"
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}"
-        sudo apt update -y 
+        apt remove --purge codium -y
+        apt remove --purge vi -y
+        apt remove --purge vim -y
+        apt remove --purge vin -y
+        apt remove --purge nvim -y
+        apt remove --purge neovim -y
+        apt update -y 
 
         # Paquetes BSPWM + POLYBAR + Escritorio => Debian
 
@@ -155,7 +162,7 @@ function check_os() {
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
         libxcb-randr0-dev libxcb-icccm4-dev libxcb-keysyms1-dev 
         libxcb-xinerama0-dev libxcb-xtest0-dev libxcb-shape0-dev 
-        xcb-proto
+        xcb-proto zsh zsh-syntax-highlighting
         
         # Dependencias de compilación Polybar
         cmake-data pkg-config
@@ -216,34 +223,34 @@ function check_os() {
 
         dpkg --configure -a &>/dev/null
         apt --fix-broken --fix-missing install &>/dev/null
-        sudo apt autoremove -y &>/dev/null
-        sudo apt-get clean &>/dev/null
-        sudo apt autoclean &>/dev/null
+        apt autoremove -y &>/dev/null
+        apt-get clean &>/dev/null
+        apt autoclean &>/dev/null
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
         cd "${INSTALL_DIR}"
 
         # Clone repos bspwm and sxhkdrc 
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
-        sudo make install
+        make install
         cd "${INSTALL_DIR}/sxhkd/"
         make
-        sudo make install 
+        make install 
 
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
+        runuser -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
         sudo mkdir -p /usr/share/fonts/truetype
-        sudo cp * /usr/share/fonts/truetype/
+        cp * /usr/share/fonts/truetype/
         pushd /usr/share/fonts/truetype &>/dev/null 
         fc-cache -v
         popd &>/dev/null 
@@ -251,39 +258,44 @@ function check_os() {
         # Picom Compilation
         printf "%b\n" "${greenColour}${rev}Picom compilation.${endColour}"
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/ibhagwan/picom.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/ibhagwan/picom.git
         cd picom/
         git submodule update --init --recursive
         meson --buildtype=release . build
         ninja -C build
-        sudo ninja -C build install 
+        ninja -C build install 
 
         # Polybar Compilation
         printf "%b\n" "${greenColour}${rev}Polybar compilation.${endColour}"
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        runuser -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         mkdir build
         cd build/
         cmake ..
         make -j$(nproc)
-        sudo make install
+        make install
         ;;
       arch)
         printf "%b\n"  "\n${blueColour}${grisBg}${bold}The system is Arch Linux${endColour}"
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Arch Linux${endColour}"
-
+        
+        pacman -Rns --noconfirm codium 
+        pacman -Rns --noconfirm vi 
+        pacman -Rns --noconfirm vim 
+        pacman -Rns --noconfirm neovim
+        pacman -Rns --noconfirm nvim
+                        
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
         # Core BSPWM + Polybar
-        git base-devel curl wget cmake bspwm sxhkd polybar
+        git base-devel curl wget cmake bspwm sxhkd polybar dpkg
         
         # Dependencias XCB
         libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms
         
         # Librerías gráficas
-        libgl libxcursor libxext libxi libxinerama 
-        libxkbcommon-x11 libxrandr mesa python-sphinx
+        libgl libxcursor libxext libxi libxinerama libxkbcommon-x11 libxrandr mesa python-sphinx
         
         # Compositor
         picom
@@ -307,30 +319,19 @@ function check_os() {
         caja ranger yazi
     
         # Apariencia y temas
-        polkit-gnome papirus-icon-theme lxappearance
+        polkit-gnome papirus-icon-theme lxappearance zsh zsh-syntax-highlighting
         
         # Utilidades de escritorio
-        xdo xdotool xclip brightnessctl playerctl
-        pamixer redshift eww-git
-        
-        # Lockscreen
-        i3lock-color
+        xdo xdotool xclip brightnessctl playerctl pamixer redshift
         
         # X.org
-        xorg xorg-server xorg-xinit xorg-xdpyinfo
-        xorg-xkill xorg-xprop xorg-xrandr 
-        xorg-xsetroot xorg-xwininfo
+        xorg xorg-server xorg-xinit xorg-xdpyinfo xorg-xkill xorg-xprop xorg-xrandr xorg-xsetroot xorg-xwininfo
         
         # Drivers (virtuales y físicos)
-        xf86-input-vmmouse xf86-video-intel 
-        xf86-video-vmware open-vm-tools
-      
-        # Fuentes
-        fontconfig ttf-maple
+        xf86-video-intel xf86-video-vmware open-vm-tools
         
         # Extras de entorno
-        tdrop-git rofi-greenclip xqp 
-        xsettingsd xwinwrap-0.9-bin
+        xsettingsd
         
         # MTP (Android)
         gvfs-mtp simple-mtpfs
@@ -352,73 +353,76 @@ function check_os() {
         # Instalacion de Paru, y dependecias para blackarch
 
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/paru-bin.git
+        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
+        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" curl -O https://blackarch.org/strap.sh
+        runuser -u "${SUDO_USER}" curl -O https://blackarch.org/strap.sh
         sudo chmod +x strap.sh
-        sudo ./strap.sh
+        ./strap.sh
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/snapd.git       
+        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/snapd.git       
         cd "${INSTALL_DIR}/snapd"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
-        sudo systemctl enable --now snapd.socket
-        sudo systemctl restart snapd.service
+        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
+        systemctl enable --now snapd.socket
+        systemctl restart snapd.service
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
+        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
-        sudo pacman -Syu --overwrite '*' --noconfirm
+        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
+        runuser -u "${AUR_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
+        pacman -Syu --overwrite '*' --noconfirm
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
         cd "${INSTALL_DIR}"
 
         # Clone repos bspwm and sxhkdrc 
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
-        sudo make install
+        make install
         cd "${INSTALL_DIR}/sxhkd/"
         make
-        sudo make install 
+        make install 
 
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
         cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        runuser -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
+        runuser -u "${SUDO_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
-        sudo mkdir -p /usr/share/fonts/truetype
-        sudo cp * /usr/share/fonts/truetype/
+        mkdir -p /usr/share/fonts/truetype
+        cp * /usr/share/fonts/truetype/
         pushd /usr/share/fonts/truetype &>/dev/null 
         fc-cache -v
         popd &>/dev/null 
         # Compilation polybar Arch Linux
         printf "%b\n" "${greenColour}${rev}Creating swap and compiling Polybar for Arch Linux .${endColour}"
         sleep 5
-        sudo fallocate -l 2G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
+        fallocate -l 2G /swapfile
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
         printf "%b\n" "${redColour}${grisBg}${bold}If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
-        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        cd "${INSTALL_DIR}"
+        runuser -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         rm -rf build
         mkdir build
         cd build/
         sleep 5
-        cmake .. -DBUILD_DOCS=OFF
+        cmake .. -DBUILD_DOC=OFF
         sleep 5
         make -j$(nproc)
         sleep 5
-        sudo make install
-        sudo swapoff /swapfile
-        sudo rm /swapfile
+        make install
+        swapoff /swapfile
+        rm /swapfile
+        runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polibar/" "${USER_HOME}/.config/"
         ;;
       *)
         printf "%b\n" "\n${redColour}${rev}The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
@@ -433,30 +437,31 @@ function bspwm_enviroment() {
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
-  sudo chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
-  sudo chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
-  sudo chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
-  sudo chmod +x "${USER_HOME}/.config/polybar/launch.sh"
-  sudo chmod +x "${USER_HOME}/.config/picom/picom.conf"
-  sudo chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
-  sudo ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
+  runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
+  chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
+  chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
+  chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
+  chmod +x "${USER_HOME}/.config/picom/picom.conf"
+  chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
+  ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
 
   # Install powerlevel10k
   printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
+  runuser -u "${SUDO_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
   # Install Fonts Hack nerd-fonts
   printf "%b\n" "${greenColour}${rev}Install Hack Nerd Fonts.${endColour}"
-  sudo wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Hack.zip
-  sudo unzip Hack.zip > /dev/null 2>&1 && sudo mv *.ttf /usr/local/share/fonts/
-  sudo rm -f Hack.zip LICENSE.md README.md 2>/dev/null 
+  cd "${INSTALL_DIR}" 
+  wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Hack.zip
+  mkdir -p /usr/local/share/fonts/
+  unzip Hack.zip > /dev/null 2>&1 && sudo mv *.ttf /usr/local/share/fonts/
+  rm -f Hack.zip LICENSE.md README.md 2>/dev/null 
   pushd /usr/local/share/fonts/
   fc-cache -v
   popd
@@ -464,120 +469,122 @@ function bspwm_enviroment() {
   # Install Wallpaper
   printf "%b\n" "${greenColour}${rev}Configuration wallpaper.${endColour}"
   cd "${INSTALL_DIR}" 
-  sudo -u "${SUDO_USER}" mkdir -p "${USER_HOME}/Pictures"
-  sudo cp "${INSTALL_DIR}"/Entorno-BSPWN/*.png "${USER_HOME}/Pictures" 
-  sudo cp "${INSTALL_DIR}"/Entorno-BSPWN/*.gif "${USER_HOME}/Pictures"
+  runuser -u "${SUDO_USER}" mkdir -p "${USER_HOME}/Pictures"
+  cp "${INSTALL_DIR}"/Entorno-BSPWN/*.png "${USER_HOME}/Pictures" 
+  cp "${INSTALL_DIR}"/Entorno-BSPWN/*.gif "${USER_HOME}/Pictures"
   printf "%b\n" "${greenColour}${rev}Install plugin sudo.${endColour}"
-  sudo mkdir /usr/share/zsh-sudo
-  sudo wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/sudo/sudo.plugin.zsh
-  sudo cp sudo.plugin.zsh /usr/share/zsh-sudo/ 
+  mkdir /usr/share/zsh-sudo
+  wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/sudo/sudo.plugin.zsh
+  cp sudo.plugin.zsh /usr/share/zsh-sudo/ 
 
   # Install Batcat
   printf "%b\n" "${greenColour}${rev}Install batcat.${endColour}"
   cd "${INSTALL_DIR}" 
-  sudo wget -q https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-musl_0.24.0_amd64.deb
-  sudo dpkg -i bat-musl_0.24.0_amd64.deb
+  wget -q https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-musl_0.24.0_amd64.deb
+  dpkg -i bat-musl_0.24.0_amd64.deb
 
   # Install LSD
   printf "%b\n" "${greenColour}${rev}Install lsd.${endColour}"
   cd "${INSTALL_DIR}" 
-  sudo wget -q https://github.com/lsd-rs/lsd/releases/download/v1.0.0/lsd-musl_1.0.0_amd64.deb
-  sudo dpkg -i lsd-musl_1.0.0_amd64.deb
+  wget -q https://github.com/lsd-rs/lsd/releases/download/v1.0.0/lsd-musl_1.0.0_amd64.deb
+  dpkg -i lsd-musl_1.0.0_amd64.deb
 
   # Install fzf
   printf "%b\n" "${greenColour}${rev}Install fzf.${endColour}"
-  sudo -u "${SUDO_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
-  sudo -u "${SUDO_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
-  sudo git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf &>/dev/null
-  sudo ~/.fzf/install --all &>/dev/null
+  runuser -u "${SUDO_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
+  runuser -u "${SUDO_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
+  git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf &>/dev/null
+  ~/.fzf/install --all &>/dev/null
 
   # Install NvChad 
-  printf "%b\n" "${greenColour}${rev}Install nvcahd.${endColour}"
-  sudo apt remove --purge codium -y
-  sudo apt remove --purge vi -y
-  sudo apt remove --purge vim -y
-  sudo apt remove --purge vin -y
-  sudo apt remove --purge nvim -y
-  sudo apt remove --purge neovim -y 
+  printf "%b\n" "${greenColour}${rev}Install nvcahd.${endColour}" 
   cd "${INSTALL_DIR}" 
   # 1. Descargar el tarball oficial
-  sudo wget -q https://github.com/neovim/neovim/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
+  wget -q https://github.com/neovim/neovim/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
   # 2. Extraer el contenido
   tar xzvf nvim-linux-x86_64.tar.gz
   # 3. Mover la carpeta completa a /opt (requiere sudo)
-  sudo mv nvim-linux-x86_64 /opt/nvim
+  mv nvim-linux-x86_64 /opt/nvim
   # 4. Crear un enlace simbólico en /usr/bin para usarlo globalmente
-  sudo ln -s /opt/nvim/bin/nvim /usr/bin/nvim
+  ln -s /opt/nvim/bin/nvim /usr/bin/nvim
   # 5. (Opcional) Limpiar el tarball descargado
   rm nvim-linux-x86_64.tar.gz
-  sudo -u "${SUDO_USER}" rm -rf "${USER_HOME}/.config/nvim" 
-  sudo -u "${SUDO_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
+  runuser -u "${SUDO_USER}" rm -rf "${USER_HOME}/.config/nvim" 
+  runuser -u "${SUDO_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "${USER_HOME}/.config/nvim/init.lua"
-  sudo rm -rf /root/.config/nvim
-  sudo git clone https://github.com/NvChad/starter /root/.config/nvim && nvim --headless '+Lazy! sync' +qa
+  rm -rf /root/.config/nvim
+  git clone https://github.com/NvChad/starter /root/.config/nvim && nvim --headless '+Lazy! sync' +qa
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "/root/.config/nvim/init.lua"
+  
+  printf "%b\n" "${greenColour}${rev}Install themes polybar.${endColour}"
+  cd "${INSTALL_DIR}"
+  git clone https://github.com/adi1090x/polybar-themes.git
+  cd polybar-themes
+  cp "${INSTALL_DIR}/Entorno-BSPWN/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
+  cd "${INSTALL_DIR}/polybar-themes"
+  chmod +x setup.sh
+  ./setup.sh
+  # in bspwnrc
+  # Available Themes : --
+  #--blocks    --colorblocks    --cuts      --docky
+  #--forest    --grayblocks     --hack      --material
+  #--panels    --pwidgets       --shades    --shapes
 
   case "${entorno,,}" in
     si|y|yes|yey)
       printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
-      cd "${INSTALL_DIR}/polybar"
-      sudo -u "${SUDO_USER}" find . -maxdepth 1 ! -name 'launch.sh' ! -name '.' -exec cp -r {} "${USER_HOME}/.config/polybar" \; &>/dev/null
-      sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/polybar/launch.sh" "${USER_HOME}/.config/polybar/launch4.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      sudo -u "${SUDO_USER}" sed -i 's|̣̣~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+      chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
+      chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
+      chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
+      chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+      runuser -u "${SUDO_USER}" sed -i 's#~/.config/polybar/launch\.sh --forest#~/.config/polybar/launch4.sh --forest#g' "${USER_HOME}/.config/bspwm/bspwmrc"
+      printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
+      runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
+
     ;;
     ""|n|no|nay)
-      printf "%b\n" "${greenColour}${rev}Install themes polybar.${endColour}"
-      cd "${INSTALL_DIR}"
-      sudo git clone https://github.com/adi1090x/polybar-themes.git
-      cd polybar-themes
-      cp "${INSTALL_DIR}/Entorno-BSPWN/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
-      cd "${INSTALL_DIR}/polybar-themes"
-      sudo chmod +x setup.sh
-      ./setup.sh
-      # in bspwnrc
-      #Available Themes : --
-      #--blocks    --colorblocks    --cuts      --docky
-      #--forest    --grayblocks     --hack      --material
-      #--panels    --pwidgets       --shades    --shapes
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/preview.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/checkupdates"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/style-switch.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/styles.sh"
-      sudo chmod +x "${USER_HOME}/.config/polybar/forest/scripts/updates.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/preview.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/checkupdates"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/style-switch.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/styles.sh"
+      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/updates.sh"
+      printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
+      runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
     ;;
     *)
     printf "%b\n" "${yellowColour}[!] Respuesta no válida.${endColour}"
     helpPanel
     ;;
   esac
-  sudo usermod --shell /usr/bin/zsh "$SUDO_USER"
-  sudo usermod --shell /usr/bin/zsh root
-  sudo chown "${SUDO_USER}:${SUDO_USER}" "/root"
-  sudo chown "${SUDO_USER}:${SUDO_USER}" "/root/.cache" -R
-  sudo chown "${SUDO_USER}:${SUDO_USER}" "/root/.local" -R
+  tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
+  ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
+  chown "${SUDO_USER}:${SUDO_USER}" "${USER_HOME}/.zshrc"
+  usermod --shell /usr/bin/zsh "$SUDO_USER"
+  usermod --shell /usr/bin/zsh root
+  chown "${SUDO_USER}:${SUDO_USER}" "/root"
+  chown "${SUDO_USER}:${SUDO_USER}" "/root/.cache" -R
+  chown "${SUDO_USER}:${SUDO_USER}" "/root/.local" -R
+  updatedb
 }
 
 function update_debian() {
     printf "%b\n" "${greenColour}${rev}Installing additional packages for the correct functioning of the environment.${endColour}"
     cd "${INSTALL_DIR}"
-    sudo apt remove --purge python3-unicodecsv -y
-    sudo apt remove --purge burpsuite -y
+    apt remove --purge python3-unicodecsv -y
+    apt remove --purge burpsuite -y
 
     # Verificar si es Kali Linux y configurar wine
     if [[ -f /etc/os-release && $(grep -q "kali" /etc/os-release; echo $?) -eq 0 ]]; then
       printf "%b\n" "${blueColour}${rev}Configuring wine for Kali Linux.${endColour}"
-        sudo dpkg --add-architecture i386
+      dpkg --add-architecture i386
     fi 
 
     # PAQUETES DE HACKING, PENTESTING, DESARROLLO Y UTILIDADES
@@ -687,8 +694,7 @@ function update_debian() {
     flite gimp hexchat imagemagick locate neo4j 
     qrencode recordmydesktop rlwrap 
     software-properties-common translate-shell 
-    wayland-protocols wkhtmltopdf wmis zbar-tools 
-    zsh zsh-syntax-highlighting dex)
+    wayland-protocols wkhtmltopdf wmis zbar-tools dex)
 
     for package in "${packages_tools_debian[@]}"; do
       if sudo apt-get install "${APT_FLAGS[@]}" "${package}"; then
@@ -700,14 +706,9 @@ function update_debian() {
     
     # Limpiar y actualizar la base de datos
     printf "%b\n" "${greenColour}${rev}Cleaning up and updating package database.${endColour}"
-    sudo apt -y --fix-broken --fix-missing full-upgrade 
-    sudo apt -y full-upgrade
-    sudo tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
-    sudo updatedb
-    printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-    sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc" 
-    sudo ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
-    sudo chown ${SUDO_USER}:${SUDO_USER} /home/${SUDO_USER}/.zshrc
+    apt -y --fix-broken --fix-missing full-upgrade 
+    apt -y full-upgrade
+
 }
 
 function update_arch(){
@@ -804,8 +805,7 @@ function update_arch(){
     pngcrush qrencode recordmydesktop 
     rlwrap translate-shell 
     wayland-protocols webp-pixbuf-loader 
-    wkhtmltopdf xdg-user-dirs wine
-    zsh zsh-syntax-highlighting)    
+    wkhtmltopdf xdg-user-dirs wine)    
 
     for package in "${packages_tools_arch[@]}"; do
       if sudo pacman -S "${package}" --noconfirm --needed ; then
@@ -816,18 +816,12 @@ function update_arch(){
     done 
     
     printf "%b\n" "${greenColour}${rev}Install Tools paru${endColour}"
-    sudo paru -S --skipreview tdrop-git xqp rofi-greenclip xwinwrap-0.9-bin ttf-maple i3lock-color simple-mtpfs eww-git --noconfirm
+    paru -S --skipreview tdrop-git xqp rofi-greenclip xwinwrap-0.9-bin ttf-maple i3lock-color simple-mtpfs eww-git --noconfirm
     sleep 1
     printf "%b\n"  "${greenColour}${rev}Install Tools yay${endColour}"
-    sudo yay -S dpkg rustscan
+    yay -S dpkg rustscan
     printf "%b\n"  "${greenColour}${rev}Install Tools snap${endColour}"
-    sudo snap install node --classic
-    printf "%b\n" "${greenColour}${rev}Cleaning up and updating package database.${endColour}"
-    sudo tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
-    sudo updatedb
-    printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-    sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
-    sudo ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
+    snap install node --classic
 }
 
 function core_package(){
@@ -835,15 +829,15 @@ function core_package(){
     # No instalar en sistema que esten produccion
     # Eliminar restricción de pip
     printf "%b\n" "${greenColour}${rev}Install Python.${endColour}"
-    sudo rm -f /usr/lib/python3*/EXTERNALLY-MANAGED 2>/dev/null
+    rm -f /usr/lib/python3*/EXTERNALLY-MANAGED 2>/dev/null
 
     # Actualizar pip y otras (herramientas aisladas)
-    sudo python3 -m pip install --upgrade pip pipx pwntools pyparsing
+    python3 -m pip install --upgrade pip pipx pwntools pyparsing
 
     # Instalación con pipx
-    sudo pipx install git+https://github.com/brightio/penelope
-    sudo pipx install posting donpapi
-    sudo pipx install git+https://github.com/blacklanternsecurity/MANSPIDER 
+    pipx install git+https://github.com/brightio/penelope
+    pipx install posting donpapi
+    pipx install git+https://github.com/blacklanternsecurity/MANSPIDER 
     
     # Herramientas de pentesting (NO disponibles en APT o versión muy vieja)
     sudo -H pip3 install -U minikerberos oletools xlrd wesng pwncat-cs git-dumper crawley certipy-ad jsbeautifier
@@ -857,7 +851,7 @@ function core_package(){
 
     #Install gem Packeage
     printf "%b\n" "${greenColour}${rev}Install Ruby.${endColour}"
-    sudo gem install evil-winrm http httpx docopt rest-client colored2 wpscan winrm-fs stringio logger fileutils winrm brakeman
+    gem install evil-winrm http httpx docopt rest-client colored2 wpscan winrm-fs stringio logger fileutils winrm brakeman
 
     # Install GO y Apps
     printf "%b\n" "${greenColour}${rev}Install go.${endColour}"
