@@ -132,8 +132,8 @@ function check_os() {
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
     # Creamos directorios de trabajo
-    runuser -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
-    runuser find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
+    sudo -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
+    sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
     cd "${INSTALL_DIR}"
     if [[ ! -f /etc/os-release ]]; then 
        printf "%b\n" "\n${redColour}${rev}The system is not permitive${endColour}"    
@@ -231,8 +231,8 @@ function check_os() {
         cd "${INSTALL_DIR}"
 
         # Clone repos bspwm and sxhkdrc 
-        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
         make install
@@ -243,9 +243,9 @@ function check_os() {
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        runuser -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
+        sudo -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -258,7 +258,7 @@ function check_os() {
         # Picom Compilation
         printf "%b\n" "${greenColour}${rev}Picom compilation.${endColour}"
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://github.com/ibhagwan/picom.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/ibhagwan/picom.git
         cd picom/
         git submodule update --init --recursive
         meson --buildtype=release . build
@@ -268,7 +268,7 @@ function check_os() {
         # Polybar Compilation
         printf "%b\n" "${greenColour}${rev}Polybar compilation.${endColour}"
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         mkdir build
         cd build/
@@ -353,32 +353,32 @@ function check_os() {
         # Instalacion de Paru, y dependecias para blackarch
 
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/paru-bin.git
+        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
-        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
+        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" curl -O https://blackarch.org/strap.sh
+        sudo -u "${SUDO_USER}" curl -O https://blackarch.org/strap.sh
         sudo chmod +x strap.sh
         ./strap.sh
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/snapd.git       
+        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/snapd.git       
         cd "${INSTALL_DIR}/snapd"
-        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
+        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
         systemctl enable --now snapd.socket
         systemctl restart snapd.service
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
+        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
-        runuser -u "${SUDO_USER}" makepkg -si --noconfirm
-        runuser -u "${AUR_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
+        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
+        sudo -u "${AUR_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
         pacman -Syu --overwrite '*' --noconfirm
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
         cd "${INSTALL_DIR}"
 
         # Clone repos bspwm and sxhkdrc 
-        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        runuser -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
         make install
@@ -389,9 +389,9 @@ function check_os() {
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        runuser -u "${SUDO_USER}" rm -r "${USER_HOME}/.config/polybar/*"
+        sudo -u "${SUDO_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -409,7 +409,7 @@ function check_os() {
         swapon /swapfile
         printf "%b\n" "${redColour}${grisBg}${bold}If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
         cd "${INSTALL_DIR}"
-        runuser -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         rm -rf build
         mkdir build
@@ -436,13 +436,13 @@ function bspwm_enviroment() {
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
-  runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
+  sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
   chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
   chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
   chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
@@ -452,7 +452,7 @@ function bspwm_enviroment() {
 
   # Install powerlevel10k
   printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
-  runuser -u "${SUDO_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
+  sudo -u "${SUDO_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
   # Install Fonts Hack nerd-fonts
@@ -469,7 +469,7 @@ function bspwm_enviroment() {
   # Install Wallpaper
   printf "%b\n" "${greenColour}${rev}Configuration wallpaper.${endColour}"
   cd "${INSTALL_DIR}" 
-  runuser -u "${SUDO_USER}" mkdir -p "${USER_HOME}/Pictures"
+  sudo -u "${SUDO_USER}" mkdir -p "${USER_HOME}/Pictures"
   cp "${INSTALL_DIR}"/Entorno-BSPWN/*.png "${USER_HOME}/Pictures" 
   cp "${INSTALL_DIR}"/Entorno-BSPWN/*.gif "${USER_HOME}/Pictures"
   printf "%b\n" "${greenColour}${rev}Install plugin sudo.${endColour}"
@@ -491,8 +491,8 @@ function bspwm_enviroment() {
 
   # Install fzf
   printf "%b\n" "${greenColour}${rev}Install fzf.${endColour}"
-  runuser -u "${SUDO_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
-  runuser -u "${SUDO_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
+  sudo -u "${SUDO_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
+  sudo -u "${SUDO_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
   git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf &>/dev/null
   ~/.fzf/install --all &>/dev/null
 
@@ -509,8 +509,8 @@ function bspwm_enviroment() {
   ln -s /opt/nvim/bin/nvim /usr/bin/nvim
   # 5. (Opcional) Limpiar el tarball descargado
   rm nvim-linux-x86_64.tar.gz
-  runuser -u "${SUDO_USER}" rm -rf "${USER_HOME}/.config/nvim" 
-  runuser -u "${SUDO_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
+  sudo -u "${SUDO_USER}" rm -rf "${USER_HOME}/.config/nvim" 
+  sudo -u "${SUDO_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "${USER_HOME}/.config/nvim/init.lua"
   rm -rf /root/.config/nvim
@@ -539,9 +539,11 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      runuser -u "${SUDO_USER}" sed -i 's#~/.config/polybar/launch\.sh --forest#~/.config/polybar/launch4.sh --forest#g' "${USER_HOME}/.config/bspwm/bspwmrc"
+      sudo -u "${SUDO_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+
+
       printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-      runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
+      sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
 
     ;;
     ""|n|no|nay)
@@ -557,7 +559,7 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/styles.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/updates.sh"
       printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-      runuser -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
+      sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
     ;;
     *)
     printf "%b\n" "${yellowColour}[!] Respuesta no válida.${endColour}"
