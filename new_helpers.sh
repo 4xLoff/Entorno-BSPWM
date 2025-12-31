@@ -289,10 +289,10 @@ function check_os() {
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
         # Core BSPWM + Polybar
-        git base-devel curl wget cmake bspwm sxhkd polybar dpkg
+        git base-devel curl wget cmake bspwm sxhkd polybar dpkg net-tools
         
         # Dependencias XCB
-        libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms
+        libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms cronie
         
         # Librerías gráficas
         libgl libxcursor libxext libxi libxinerama libxkbcommon-x11 libxrandr mesa python-sphinx
@@ -422,7 +422,6 @@ function check_os() {
         make install
         swapoff /swapfile
         rm /swapfile
-        runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polibar/" "${USER_HOME}/.config/"
         ;;
       *)
         printf "%b\n" "\n${redColour}${rev}The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
@@ -437,6 +436,7 @@ function bspwm_enviroment() {
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
+  runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
   runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
   runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
   runuser -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
@@ -1414,14 +1414,15 @@ function clean_bspwm() {
     
     # Usar la variable operative_sistem para determinar las acciones de limpieza
     if [[ -f /etc/arch-release ]]; then
-        sudo pacman -Scc --noconfirm
-        sudo pacman -Syu --noconfirm
-        sudo pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
+        pacman -Scc --noconfirm
+        pacman -Syu --noconfirm
+        pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
         printf "%b\n" "${greenColour}${rev}Habilitando demonios.${endColour}"
         localectl set-x11-keymap es
-        sudo systemctl enable vmtoolsd 2>/dev/null
-        sudo systemctl enable gdm.service 2>/dev/null 
-        sudo systemctl start gdm.service 2>/dev/null
+        systemctl enable vmtoolsd 2>/dev/null
+        systemctl enable gdm.service 2>/dev/null 
+        systemctl start gdm.service 2>/dev/null
+        systemctl enable --now cronie.service 2>/dev/null
     else
         sudo apt update -y
         sudo dpkg --configure -a 
