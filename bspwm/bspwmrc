@@ -19,7 +19,7 @@ cleartarget
 # Prove Video Wallpaper
 #/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
 /usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
-~/.config/polybar/launch.sh 
+~/.config/polybar/launch.sh --forest
 /usr/local/bin/picom --config ~/.config/picom/picom.conf
 /usr/bin/bspc config focus_follows_pointer true
 /usr/local/bin/picom --experimental-backends &
