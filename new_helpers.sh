@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+exec > >(tee -a /home/axel/script_$(date +%Y%m%d_%H%M%S).log) 2>&1
+
 # Author: Jhon Carlos Lara (aka 4xL)
 
 # Estilos de texto
@@ -112,7 +114,7 @@ ctrl_c() {
     printf "%b\n" "\n${redColour}${rev}[!] Exiting...${endColour}"
     tput cnorm
     [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && sudo rm -rf "${INSTALL_DIR:?}"/*
-    find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec rm -rf {} \; 2>/dev/null 
+    find "${USER_HOME}" -type d -name "${}" -exec rm -rf {} \; 2>/dev/null 
     set +e
     exit 1
   fi
@@ -156,7 +158,7 @@ function check_os() {
 
         packages_bspwm_debian=(
         # Core BSPWM + Polybar
-        curl wget git dpkg gnupg gdb cmake bspwm sxhkd polybar
+        curl wget git dpkg gnupg gdb cmake net-tools plocate
         
         # Dependencias de compilación BSPWM
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
@@ -182,9 +184,6 @@ function check_os() {
         libx11-xcb-dev libxext-dev libxi-dev
         libxinerama-dev libxkbcommon-x11-dev libxrandr-dev
         libgl1-mesa-dev libpixman-1-dev
-    
-        # Compositor y herramientas visuales
-        picom
         
         # Terminal
         kitty
@@ -214,7 +213,7 @@ function check_os() {
         fontconfig)
 
         for package in "${packages_bspwm_debian[@]}"; do
-          if sudo apt-get install "${APT_FLAGS[@]}" "${package}"; then
+          if apt install "${APT_FLAGS[@]}" "${package}"; then
               printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
           else
               printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
@@ -289,16 +288,13 @@ function check_os() {
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
         # Core BSPWM + Polybar
-        git base-devel curl wget cmake bspwm sxhkd polybar dpkg net-tools
+        git base-devel curl wget cmake dpkg net-tools plocate gnome
         
         # Dependencias XCB
         libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms cronie
         
         # Librerías gráficas
         libgl libxcursor libxext libxi libxinerama libxkbcommon-x11 libxrandr mesa python-sphinx
-        
-        # Compositor
-        picom
         
         # Terminal
         kitty
@@ -343,7 +339,7 @@ function check_os() {
         htop eza)
 
         for package in "${packages_bspwm_arch[@]}"; do
-          if sudo pacman -S "${package}" --noconfirm --needed ; then
+          if pacman -S "${package}" --noconfirm --needed ; then
               printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
           else
               printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
@@ -370,7 +366,7 @@ function check_os() {
         sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
         sudo -u "${SUDO_USER}" makepkg -si --noconfirm
-        sudo -u "${AUR_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
+        sudo -u "${{SUDO_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
         pacman -Syu --overwrite '*' --noconfirm
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
@@ -699,7 +695,7 @@ function update_debian() {
     wayland-protocols wkhtmltopdf wmis zbar-tools dex)
 
     for package in "${packages_tools_debian[@]}"; do
-      if sudo apt-get install "${APT_FLAGS[@]}" "${package}"; then
+      if apt-get install "${APT_FLAGS[@]}" "${package}"; then
           printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
       else
           printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
@@ -810,7 +806,7 @@ function update_arch(){
     wkhtmltopdf xdg-user-dirs wine)    
 
     for package in "${packages_tools_arch[@]}"; do
-      if sudo pacman -S "${package}" --noconfirm --needed ; then
+      if pacman -S "${package}" --noconfirm --needed ; then
     printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
       else
           printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
@@ -987,15 +983,20 @@ function core_package(){
 
 function repositories(){
 
-    sudo git clone https://github.com/ropnop/kerbrute /opt/kerbrute
+    # Install incursore
+    printf "%b\n" "${yellowColour}Install incursore.${endColour}"
+    cd "${OPT_DIR}"
+    git clone https://github.com/wirzka/incursore.git
+    sudo ln -s $(pwd)/incursore/incursore.sh /usr/local/bin/incursore
+    #incursore.sh -h
 
     : '
     # Install WhatWaf
     printf "%b\n" "${greenColour}${rev}Install WhatWaf.${endColour}"
     cd "${OPT_DIR}"
-    sudo git clone https://github.com/Ekultek/WhatWaf
+    git clone https://github.com/Ekultek/WhatWaf
     cd WhatWaf
-    sudo python3 setup.py install
+    python3 setup.py install
     #whatwaf -h
  
     # Install bfac
@@ -1003,7 +1004,7 @@ function repositories(){
     cd "${OPT_DIR}"
     git clone https://github.com/mazen160/bfac
     cd bfac
-    sudo python3 setup.py install
+    python3 setup.py install
     #bfac -h
 
     # Install Postman
@@ -1018,7 +1019,7 @@ function repositories(){
     # Install git-hound
     printf "%b\n" "${yellowColour}Install git-hound.${endColour}"
     cd "${OPT_DIR}"
-    sudo git clone https://github.com/tillson/git-hound
+    git clone https://github.com/tillson/git-hound
     cd git-hound
     sudo go build .
     sudo go build -ldflags "-s -w" .
@@ -1028,24 +1029,16 @@ function repositories(){
     # Install nmapAutomator
     printf "%b\n" "${yellowColour}Install nmapAutomator.${endColour}"
     cd "${OPT_DIR}"
-    sudo git clone https://github.com/21y4d/nmapAutomator.git
+    git clone https://github.com/21y4d/nmapAutomator.git
     sudo ln -s $(pwd)/nmapAutomator/nmapAutomator.sh /usr/local/bin/
     #nmapAutomator.sh -h
-
-    # Install incursore
-    printf "%b\n" "${yellowColour}Install incursore.${endColour}"
-    cd "${OPT_DIR}"
-    sudo git clone https://github.com/wirzka/incursore.git
-    sudo ln -s $(pwd)/incursore/incursore.sh /usr/local/bin/
-    sudo chmod +x incursore.sh
-    #incursore.sh -h
 
     # Install Reconnoitre
     printf "%b\n" "${yellowColour}Install Reconnoitre.${endColour}"
     cd "${OPT_DIR}"
-    sudo git clone https://github.com/codingo/Reconnoitre.git
+    git clone https://github.com/codingo/Reconnoitre.git
     cd Reconnoitre
-    sudo python3 setup.py install
+    python3 setup.py install
     #reconnoitre --help
 
     printf "%b\n" "${greenColour}${rev}Install DockerRegistryGrabber.${endColour}"
@@ -1230,13 +1223,13 @@ function repositories(){
     cd "${OPT_DIR}"
     git clone https://github.com/wifiphisher/wifiphisher.git # Download the latest revision
     cd wifiphisher 
-    sudo python setup.py install # Install any dependencies
+    python setup.py install # Install any dependencies
 
     printf "%b\n" "${greenColour}${rev}Install wifite2.${endColour}"
     cd "${OPT_DIR}"
     git clone https://github.com/derv82/wifite2.git
     cd wifite2
-    sudo python setup.py install 
+    python setup.py install 
 
     printf "%b\n" "${greenColour}${rev}Install windapsearch.${endColour}"
     cd "${OPT_DIR}"
@@ -1263,104 +1256,105 @@ function repositories(){
     printf "%b\n" "${greenColour}${rev}Install + Tools.${endColour}"
     cd "${OPT_DIR}"
     # Download Repositories in local
-    sudo git clone https://github.com/nicocha30/ligolo-ng.git /opt/ligolo-ng
-    sudo git clone https://github.com/epinna/tplmap /opt/tplmap
-    sudo git clone https://github.com/HarmJ0y/pylnker /opt/pylnker
-    sudo git clone https://github.com/3mrgnc3/BigheadWebSvr /opt/BigheadWebSvr
-    sudo git clone https://github.com/IOActive/jdwp-shellifier /opt/jdwp-shellifier
-    sudo git clone https://github.com/danielbohannon/Invoke-Obfuscation /opt/Invoke-Obfuscation
-    sudo git clone https://github.com/manulqwerty/Evil-WinRAR-Gen /opt/Evil-WinRAR-Gen
-    sudo git clone https://github.com/ptoomey3/evilarc /opt/evilarc
-    sudo git clone https://github.com/NotSoSecure/docker_fetch /opt/docker_fetch
-    sudo git clone https://github.com/cnotin/SplunkWhisperer2 /opt/SplunkWhisperer2
-    sudo git clone https://github.com/kozmic/laravel-poc-CVE-2018-15133 /opt/laravel-poc-CVE-2018-15133
-    sudo git clone https://github.com/ambionics/phpggc /opt/phpggc
-    sudo git clone https://github.com/kozmer/log4j-shell-poc /opt/log4j-shell-poc
-    sudo git clone https://github.com/epinna/weevely3 /opt/weevely3
-    sudo git clone https://github.com/ohoph/3bowla /opt/3bowla
-    sudo git clone https://github.com/v1s1t0r1sh3r3/airgeddon /opt/airgeddon
-    sudo git clone https://github.com/anbox/anbox /opt/anbox
-    sudo git clone https://github.com/anbox/anbox-modules /opt/anbox-modules
-    sudo git clone https://github.com/securecurebt5/BasicAuth-Brute /opt/BasicAuth-Brute
-    sudo git clone https://github.com/kimci86/bkcrack /opt/bkcrack
-    sudo git clone https://github.com/lobuhi/byp4xx /opt/byp4xx
-    sudo git clone https://github.com/theevilbit/ciscot7.git /opt/ciscot7
-    sudo git clone https://github.com/pentester-io/commonspeak /opt/commonspeak
-    sudo git clone https://github.com/qtc-de/completion-helpers /opt/completion-helpers
-    sudo git clone https://github.com/crackpkcs12/crackpkcs12 /opt/crackpkcs12
-    sudo git clone https://github.com/jmg/crawley /opt/crawley
-    sudo git clone https://github.com/Tib3rius/creddump7 /opt/creddump7
-    sudo git clone https://github.com/Mebus/cupp /opt/cupp
-    sudo git clone https://github.com/spipm/Depix /opt/Depix
-    sudo git clone https://github.com/teambi0s/dfunc-bypasser /opt/dfunc-bypasser
-    sudo git clone https://github.com/iagox86/dnscat2 /opt/dnscat2
-    sudo git clone https://github.com/lukebaggett/dnscat2-powershell /opt/dnscat2-powershell
-    sudo git clone https://github.com/dnSpy/dnSpy /opt/dnSpy
-    sudo git clone https://github.com/s0lst1c3/eaphammer /opt/eaphammer
-    sudo git clone https://github.com/cddmp/enum4linux-ng /opt/enum4linux-ng
-    sudo git clone https://github.com/trickster0/Enyx /opt/Enyx
-    sudo git clone https://github.com/shivsahni/FireBaseScanner /opt/FireBaseScanner
-    sudo git clone https://github.com/unode/firefox_decrypt /opt/firefox_decrypt
-    sudo git clone https://github.com/yonjar/fixgz /opt/fixgz
-    sudo git clone https://github.com/carlospolop/fuzzhttpbypass /opt/fuzzhttpbypass
-    sudo git clone https://github.com/zackelia/ghidra-dark /opt/ghidra-dark
-    sudo git clone https://github.com/git-cola/git-cola /opt/git-cola
-    sudo git clone https://github.com/lijiejie/GitHack /opt/GitHack
-    sudo git clone https://github.com/micahvandeusen/gMSADumper /opt/gMSADumper
-    sudo git clone https://github.com/GitMirar/hMailDatabasePasswordDecrypter /opt/hMailDatabasePasswordDecrypter
-    sudo git clone https://github.com/sensepost/hostapd-mana /opt/hostapd-mana
-    sudo git clone https://github.com/yasserjanah/HTTPAuthCracker /opt/HTTPAuthCracker
-    sudo git clone https://github.com/attackdebris/kerberos_enum_userlists /opt/kerberos_enum_userlists
-    sudo git clone https://github.com/chris408/known_hosts-hashcat /opt/known_hosts-hashcat
-    sudo git clone https://github.com/dirkjanm/krbrelayx /opt/krbrelayx
-    sudo git clone https://github.com/libyal/libesedb /opt/libesedb
-    sudo git clone https://github.com/initstring/linkedin2username /opt/linkedin2username
-    sudo git clone https://github.com/Plazmaz/LNKUp /opt/LNKUp
-    sudo git clone https://github.com/wetw0rk/malicious-wordpress-plugin /opt/malicious-wordpress-plugin
-    sudo git clone https://github.com/haseebT/mRemoteNG-Decrypt /opt/mRemoteNG-Decrypt
-    sudo git clone https://github.com/NotMedic/NetNTLMtoSilverTicket /opt/NetNTLMtoSilverTicket
-    sudo git clone https://github.com/Ridter/noPac.git /opt/noPac
-    sudo git clone https://github.com/quentinhardy/odat /opt/odat
-    sudo git clone https://github.com/Daniel10Barredo/OSCP_AuxReconTools /opt/OSCP_AuxReconTools
-    sudo git clone https://github.com/flozz/p0wny-shell /opt/p0wny-shell
-    sudo git clone https://github.com/mpgn/Padding-oracle-attack /opt/Padding-oracle-attack
-    sudo git clone https://github.com/AlmondOffSec/PassTheCert /opt/PassTheCert
-    sudo git clone https://github.com/topotam/PetitPotam /opt/PetitPotam
-    sudo git clone https://github.com/scr34m/php-malware-scanner /opt/php-malware-scanner
-    sudo git clone https://github.com/dirkjanm/PKINITtools /opt/PKINITtools
-    sudo git clone https://github.com/aniqfakhrul/powerview.py /opt/powerview.py
-    sudo git clone https://github.com/byt3bl33d3r/pth-toolkit /opt/pth-toolkit
-    sudo git clone https://github.com/utoni/ptunnel-ng /opt/ptunnel-ng
-    sudo git clone https://github.com/calebstewart/pwncat /opt/pwncat
-    sudo git clone https://github.com/LucifielHack/pyinstxtractor /opt/pyinstxtractor
-    sudo git clone https://github.com/3gstudent/pyKerbrute /opt/pyKerbrute
-    sudo git clone https://github.com/p0dalirius/pyLAPS /opt/pyLAPS
-    sudo git clone https://github.com/JPaulMora/Pyrit /opt/Pyrit
-    sudo git clone https://github.com/WithSecureLabs/python-exe-unpacker /opt/python-exe-unpacker
-    sudo git clone https://github.com/ShutdownRepo/pywhisker /opt/pywhisker
-    sudo git clone https://github.com/cloudflare/quiche /opt/quiche
-    sudo git clone https://github.com/n0b0dyCN/RedisModules-ExecuteCommand /opt/RedisModules-ExecuteCommand
-    sudo git clone https://github.com/Ridter/redis-rce /opt/redis-rce
-    sudo git clone https://github.com/n0b0dyCN/redis-rogue-server /opt/redis-rogue-server
-    sudo git clone https://github.com/allyshka/Rogue-MySql-Server /opt/Rogue-MySql-Server
-    sudo git clone https://github.com/sensepost/reGeorg /opt/reGeorg
-    sudo git clone https://github.com/klsecservices/rpivot /opt/rpivot
-    sudo git clone https://github.com/silentsignal/rsa_sign2n /opt/rsa_sign2n
-    sudo git clone https://github.com/Flangvik/SharpCollection /opt/SharpCollection
-    sudo git clone https://github.com/SECFORCE/SNMP-Brute /opt/SNMP-Brute
-    sudo git clone https://github.com/nccgroup/SocksOverRDP /opt/SocksOverRDP
-    sudo git clone https://github.com/byt3bl33d3r/SprayingToolkit /opt/SprayingToolkit
-    sudo git clone https://github.com/urbanadventurer/username-anarchy.git /opt/username-anarchy
-    sudo git clone https://github.com/decalage2/ViperMonkey /opt/ViperMonkey
-    sudo git clone https://github.com/mkubecek/vmware-host-modules /opt/vmware-host-modules
-    sudo git clone https://github.com/blunderbuss-wctf/wacker /opt/wacker
-    sudo git clone https://github.com/Hackndo/WebclientServiceScanner /opt/WebclientServiceScanner
-    sudo git clone https://github.com/tennc/webshell /opt/webshell
-    sudo git clone https://github.com/bitsadmin/wesng /opt/wesng
-    sudo git clone https://github.com/AonCyberLabs/Windows-Exploit-Suggester /opt/Windows-Exploit-Suggester
-    sudo git clone https://github.com/mansoorr123/wp-file-manager-CVE-2020-25213 /opt/wp-file-manager-CVE-2020-25213
-    sudo git clone https://github.com/artsploit/yaml-payload /opt/yaml-payload
-    sudo git clone https://github.com/hoto/jenkins-credentials-decryptor /opt/jenkins-credentials-decryptor
+    git clone https://github.com/ropnop/kerbrute /opt/kerbrute
+    git clone https://github.com/nicocha30/ligolo-ng.git /opt/ligolo-ng
+    git clone https://github.com/epinna/tplmap /opt/tplmap
+    git clone https://github.com/HarmJ0y/pylnker /opt/pylnker
+    git clone https://github.com/3mrgnc3/BigheadWebSvr /opt/BigheadWebSvr
+    git clone https://github.com/IOActive/jdwp-shellifier /opt/jdwp-shellifier
+    git clone https://github.com/danielbohannon/Invoke-Obfuscation /opt/Invoke-Obfuscation
+    git clone https://github.com/manulqwerty/Evil-WinRAR-Gen /opt/Evil-WinRAR-Gen
+    git clone https://github.com/ptoomey3/evilarc /opt/evilarc
+    git clone https://github.com/NotSoSecure/docker_fetch /opt/docker_fetch
+    git clone https://github.com/cnotin/SplunkWhisperer2 /opt/SplunkWhisperer2
+    git clone https://github.com/kozmic/laravel-poc-CVE-2018-15133 /opt/laravel-poc-CVE-2018-15133
+    git clone https://github.com/ambionics/phpggc /opt/phpggc
+    git clone https://github.com/kozmer/log4j-shell-poc /opt/log4j-shell-poc
+    git clone https://github.com/epinna/weevely3 /opt/weevely3
+    git clone https://github.com/ohoph/3bowla /opt/3bowla
+    git clone https://github.com/v1s1t0r1sh3r3/airgeddon /opt/airgeddon
+    git clone https://github.com/anbox/anbox /opt/anbox
+    git clone https://github.com/anbox/anbox-modules /opt/anbox-modules
+    git clone https://github.com/securecurebt5/BasicAuth-Brute /opt/BasicAuth-Brute
+    git clone https://github.com/kimci86/bkcrack /opt/bkcrack
+    git clone https://github.com/lobuhi/byp4xx /opt/byp4xx
+    git clone https://github.com/theevilbit/ciscot7.git /opt/ciscot7
+    git clone https://github.com/pentester-io/commonspeak /opt/commonspeak
+    git clone https://github.com/qtc-de/completion-helpers /opt/completion-helpers
+    git clone https://github.com/crackpkcs12/crackpkcs12 /opt/crackpkcs12
+    git clone https://github.com/jmg/crawley /opt/crawley
+    git clone https://github.com/Tib3rius/creddump7 /opt/creddump7
+    git clone https://github.com/Mebus/cupp /opt/cupp
+    git clone https://github.com/spipm/Depix /opt/Depix
+    git clone https://github.com/teambi0s/dfunc-bypasser /opt/dfunc-bypasser
+    git clone https://github.com/iagox86/dnscat2 /opt/dnscat2
+    git clone https://github.com/lukebaggett/dnscat2-powershell /opt/dnscat2-powershell
+    git clone https://github.com/dnSpy/dnSpy /opt/dnSpy
+    git clone https://github.com/s0lst1c3/eaphammer /opt/eaphammer
+    git clone https://github.com/cddmp/enum4linux-ng /opt/enum4linux-ng
+    git clone https://github.com/trickster0/Enyx /opt/Enyx
+    git clone https://github.com/shivsahni/FireBaseScanner /opt/FireBaseScanner
+    git clone https://github.com/unode/firefox_decrypt /opt/firefox_decrypt
+    git clone https://github.com/yonjar/fixgz /opt/fixgz
+    git clone https://github.com/carlospolop/fuzzhttpbypass /opt/fuzzhttpbypass
+    git clone https://github.com/zackelia/ghidra-dark /opt/ghidra-dark
+    git clone https://github.com/git-cola/git-cola /opt/git-cola
+    git clone https://github.com/lijiejie/GitHack /opt/GitHack
+    git clone https://github.com/micahvandeusen/gMSADumper /opt/gMSADumper
+    git clone https://github.com/GitMirar/hMailDatabasePasswordDecrypter /opt/hMailDatabasePasswordDecrypter
+    git clone https://github.com/sensepost/hostapd-mana /opt/hostapd-mana
+    git clone https://github.com/yasserjanah/HTTPAuthCracker /opt/HTTPAuthCracker
+    git clone https://github.com/attackdebris/kerberos_enum_userlists /opt/kerberos_enum_userlists
+    git clone https://github.com/chris408/known_hosts-hashcat /opt/known_hosts-hashcat
+    git clone https://github.com/dirkjanm/krbrelayx /opt/krbrelayx
+    git clone https://github.com/libyal/libesedb /opt/libesedb
+    git clone https://github.com/initstring/linkedin2username /opt/linkedin2username
+    git clone https://github.com/Plazmaz/LNKUp /opt/LNKUp
+    git clone https://github.com/wetw0rk/malicious-wordpress-plugin /opt/malicious-wordpress-plugin
+    git clone https://github.com/haseebT/mRemoteNG-Decrypt /opt/mRemoteNG-Decrypt
+    git clone https://github.com/NotMedic/NetNTLMtoSilverTicket /opt/NetNTLMtoSilverTicket
+    git clone https://github.com/Ridter/noPac.git /opt/noPac
+    git clone https://github.com/quentinhardy/odat /opt/odat
+    git clone https://github.com/Daniel10Barredo/OSCP_AuxReconTools /opt/OSCP_AuxReconTools
+    git clone https://github.com/flozz/p0wny-shell /opt/p0wny-shell
+    git clone https://github.com/mpgn/Padding-oracle-attack /opt/Padding-oracle-attack
+    git clone https://github.com/AlmondOffSec/PassTheCert /opt/PassTheCert
+    git clone https://github.com/topotam/PetitPotam /opt/PetitPotam
+    git clone https://github.com/scr34m/php-malware-scanner /opt/php-malware-scanner
+    git clone https://github.com/dirkjanm/PKINITtools /opt/PKINITtools
+    git clone https://github.com/aniqfakhrul/powerview.py /opt/powerview.py
+    git clone https://github.com/byt3bl33d3r/pth-toolkit /opt/pth-toolkit
+    git clone https://github.com/utoni/ptunnel-ng /opt/ptunnel-ng
+    git clone https://github.com/calebstewart/pwncat /opt/pwncat
+    git clone https://github.com/LucifielHack/pyinstxtractor /opt/pyinstxtractor
+    git clone https://github.com/3gstudent/pyKerbrute /opt/pyKerbrute
+    git clone https://github.com/p0dalirius/pyLAPS /opt/pyLAPS
+    git clone https://github.com/JPaulMora/Pyrit /opt/Pyrit
+    git clone https://github.com/WithSecureLabs/python-exe-unpacker /opt/python-exe-unpacker
+    git clone https://github.com/ShutdownRepo/pywhisker /opt/pywhisker
+    git clone https://github.com/cloudflare/quiche /opt/quiche
+    git clone https://github.com/n0b0dyCN/RedisModules-ExecuteCommand /opt/RedisModules-ExecuteCommand
+    git clone https://github.com/Ridter/redis-rce /opt/redis-rce
+    git clone https://github.com/n0b0dyCN/redis-rogue-server /opt/redis-rogue-server
+    git clone https://github.com/allyshka/Rogue-MySql-Server /opt/Rogue-MySql-Server
+    git clone https://github.com/sensepost/reGeorg /opt/reGeorg
+    git clone https://github.com/klsecservices/rpivot /opt/rpivot
+    git clone https://github.com/silentsignal/rsa_sign2n /opt/rsa_sign2n
+    git clone https://github.com/Flangvik/SharpCollection /opt/SharpCollection
+    git clone https://github.com/SECFORCE/SNMP-Brute /opt/SNMP-Brute
+    git clone https://github.com/nccgroup/SocksOverRDP /opt/SocksOverRDP
+    git clone https://github.com/byt3bl33d3r/SprayingToolkit /opt/SprayingToolkit
+    git clone https://github.com/urbanadventurer/username-anarchy.git /opt/username-anarchy
+    git clone https://github.com/decalage2/ViperMonkey /opt/ViperMonkey
+    git clone https://github.com/mkubecek/vmware-host-modules /opt/vmware-host-modules
+    git clone https://github.com/blunderbuss-wctf/wacker /opt/wacker
+    git clone https://github.com/Hackndo/WebclientServiceScanner /opt/WebclientServiceScanner
+    git clone https://github.com/tennc/webshell /opt/webshell
+    git clone https://github.com/bitsadmin/wesng /opt/wesng
+    git clone https://github.com/AonCyberLabs/Windows-Exploit-Suggester /opt/Windows-Exploit-Suggester
+    git clone https://github.com/mansoorr123/wp-file-manager-CVE-2020-25213 /opt/wp-file-manager-CVE-2020-25213
+    git clone https://github.com/artsploit/yaml-payload /opt/yaml-payload
+    git clone https://github.com/hoto/jenkins-credentials-decryptor /opt/jenkins-credentials-decryptor
     : '
 }
 
@@ -1372,38 +1366,38 @@ function latex_env(){
     printf "%b\n" "${greenColour}${rev}The latex environment will be installed, this will take more than 30 minutes approximately..${endColour}"
     
     if [[ -f /etc/arch-release ]]; then
-        sudo pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
+        pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
     else
         # Para Kali, Parrot, Ubuntu y otros sistemas basados en Debian
-        sudo apt install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
+        apt install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
     fi
 }
 
 # Spotify solo funciona para forest porque no lo he usado en otros temas
 function spotify_env(){
     cd "${INSTALL_DIR}"
-    sudo git clone https://github.com/noctuid/zscroll
+    git clone https://github.com/noctuid/zscroll
     cd zscroll
-    sudo python3 setup.py install
+    python3 setup.py install
     
     # Configuración de polybar
-    sudo rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
+    rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
     sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
     
     printf "%b\n" "${greenColour}${rev}Instalando Spotify.${endColour}"
     
     if [[ -f /etc/arch-release ]]; then
-        sudo pacman -S playerctl --noconfirm
-        sudo snap install spotify
-        sudo systemctl --user enable --now mpd.service
-        sudo systemctl is-enabled --quiet mpd.service
+        pacman -S playerctl --noconfirm
+        snap install spotify
+        systemctl --user enable --now mpd.service
+        systemctl is-enabled --quiet mpd.service
     else
         # Para Kali, Parrot, Ubuntu
-        sudo apt install playerctl -y
+        apt install playerctl -y
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-        sudo apt-get update
-        sudo apt-get install spotify-client -y
+        apt-get update
+        apt-get install spotify-client -y
     fi
 }
 
@@ -1426,14 +1420,14 @@ function clean_bspwm() {
         systemctl start gdm.service 2>/dev/null
         systemctl enable --now cronie.service 2>/dev/null
     else
-        sudo apt update -y
-        sudo dpkg --configure -a 
-        sudo apt --fix-broken --fix-missing install 
-        sudo apt -y --fix-broken --fix-missing full-upgrade
-        sudo apt -y full-upgrade
-        sudo apt autoremove -y
-        sudo apt-get clean &>/dev/null
-        sudo apt autoclean &>/dev/null
+        apt update -y
+        dpkg --configure -a 
+        apt --fix-broken --fix-missing install 
+        apt -y --fix-broken --fix-missing full-upgrade
+        apt -y full-upgrade
+        apt autoremove -y
+        apt-get clean &>/dev/null
+        apt autoclean &>/dev/null
     fi
 }
 
