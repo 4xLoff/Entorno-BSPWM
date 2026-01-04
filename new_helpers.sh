@@ -2,37 +2,37 @@
 
 exec > >(tee -a /home/axel/script_$(date +%Y%m%d_%H%M%S).log) 2>&1
 
-# Author: Jhon Carlos Lara (aka 4xL)
+# Author: (aka 4xL)
 
 # Estilos de texto
-bold=$(tput bold)               # Negrita
-dim=$(tput dim)                 # Atenuado
-rev=$(tput rev)                 # Inversión de colores
-smul=$(tput smul)               # Subrayado
+bold=$(tput bold)                      # Negrita
+dim=$(tput dim)                        # Atenuado
+rev=$(tput rev)                        # Inversión de colores
+smul=$(tput smul)                      # Subrayado
 
 # Colores de texto (foreground)
-blackColour=$(tput setaf 0)     # Negro
-redColour=$(tput setaf 1)       # Rojo brillante
-greenColour=$(tput setaf 2)     # Verde brillante
-yellowColour=$(tput setaf 3)    # Amarillo
-blueColour=$(tput setaf 4)      # Azul
-magentaColour=$(tput setaf 5)   # Magenta
-cianColour=$(tput setaf 6)      # Cian
-whiteColour=$(tput setaf 7)     # Blanco
-grisColour=$(tput setaf 8)      # Gris (a veces idéntico al negro, depende del terminal)
+blackColour=$(tput setaf 0)            # Negro
+redColour=$(tput setaf 1)              # Rojo brillante
+greenColour=$(tput setaf 2)            # Verde brillante
+yellowColour=$(tput setaf 3)           # Amarillo
+blueColour=$(tput setaf 4)             # Azul
+magentaColour=$(tput setaf 5)          # Magenta
+cianColour=$(tput setaf 6)             # Cian
+whiteColour=$(tput setaf 7)            # Blanco
+grisColour=$(tput setaf 8)             # Gris (a veces idéntico al negro, depende del terminal)
 lightBlueColour="\e[38;2;173;216;230m"
 orangeColour="\e[38;2;255;165;0m"
 
 # Colores de fondo (background)
-blackBg=$(tput setab 0)         # Fondo negro
-redBg=$(tput setab 1)           # Fondo rojo
-greenBg=$(tput setab 2)         # Fondo verde
-yellowBg=$(tput setab 3)        # Fondo amarillo
-blueBg=$(tput setab 4)          # Fondo azul
-magentaBg=$(tput setab 5)       # Fondo magenta
-cianBg=$(tput setab 6)          # Fondo cian
-whiteBg=$(tput setab 7)         # Fondo blanco
-grisBg=$(tput setab 8)          # Fondo gris (si el terminal lo soporta)
+blackBg=$(tput setab 0)                # Fondo negro
+redBg=$(tput setab 1)                  # Fondo rojo
+greenBg=$(tput setab 2)                # Fondo verde
+yellowBg=$(tput setab 3)               # Fondo amarillo
+blueBg=$(tput setab 4)                 # Fondo azul
+magentaBg=$(tput setab 5)              # Fondo magenta
+cianBg=$(tput setab 6)                 # Fondo cian
+whiteBg=$(tput setab 7)                # Fondo blanco
+grisBg=$(tput setab 8)                 # Fondo gris (si el terminal lo soporta)
 
 # Resetear formato
 endColour=$(tput sgr0)
@@ -43,7 +43,8 @@ endColour=$(tput sgr0)
 
 # Constantes Globales
 
-USER_HOME="/home/${SUDO_USER:-}"
+REAL_USER="${SUDO_USER:-$(logname)}"
+USER_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 INSTALL_DIR="${USER_HOME}/Install_BSPWM"
 OPT_DIR="/opt"
 
@@ -56,14 +57,14 @@ DEBIAN_PRIORITY="critical"
 DEBCONF_NOWARNINGS="yes"
 export DEBIAN_FRONTEND DEBIAN_PRIORITY DEBCONF_NOWARNINGS
 
-[[ -f /etc/needrestart/needrestart.conf ]] && sudo sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf &>/dev/null
-[[ -f /etc/needrestart/needrestart.conf ]] && sudo sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf &>/dev/null
-[[ -f /etc/needrestart/needrestart.conf ]] && sudo sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
+[[ -f /etc/needrestart/needrestart.conf ]] && sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf &>/dev/null
+[[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf &>/dev/null
+[[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
 APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 
 # Debe estar antes de todo por losmodos seguros
 function helpPanel() {
-    printf "%b\n" "\n${greenColour}${rev}[!] Uso: sudo $0 -d {Mode} [-c] [-r] [-l] [-s] [-b]${endColour}"
+    printf "%b\n" "\n${greenColour}${rev}[!] Uso: sudo bash $0 -d {Mode} [-c] [-r] [-l] [-s] [-b]${endColour}"
     printf "%b\n" "\t${blueColour}${rev}[-d] Mode of installation.${endColour}"
     printf "%b\n" "\t\t${magentaColour}${grisBg}${bold}debian${endColour}\t\t\t${yellowColour}${rev}Distribution Debian nesesary =< 60 gb.${endColour}"
     printf "%b\n" "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary       =< 60 gb.${endColour}"
@@ -75,7 +76,7 @@ function helpPanel() {
     printf "%b\n" "\t\t${yellowColour}-b${endColour}\t\t\t${greenColour}${rev}Mode debug${endColour}"
     printf "%b\n" "\t${redColour}[-h] Show this help panel.${endColour}"
     printf "%b\n" "\n${greenColour}Example:${endColour}"
-    printf "%b\n" "\t${blueColour}sudo $0 -d debian-ubuntu -r -l${endColour}\t${yellowColour}(Install enviroment with repositories and latex and spotify)${endColour}"
+    printf "%b\n" "\t${blueColour}sudo bash $0 -d debian${endColour}\t${yellowColour}(Install enviroment with repositories and latex and spotify)${endColour}"
     tput cnorm; exit 1
 }
 
@@ -83,10 +84,8 @@ function helpPanel() {
 
 check_sudo() {
   # Obtener el usuario REAL que ejecutó sudo (no el root)
-  REAL_USER=${SUDO_USER:-$USER}
-  
-  CURRENT_UID=$(id -u)
-  PARENT_PROCESS=$(ps -o comm= -p $PPID 2>/dev/null)
+  local CURRENT_UID=$(id -u)
+  local PARENT_PROCESS=$(ps -o comm= -p $PPID 2>/dev/null)
 
   # Verificar que:
   # 1. Estamos como root (por el sudo)
@@ -112,13 +111,12 @@ ctrl_c() {
   now=$(date +%s)
   if (( now - last < 1 )); then
     printf "%b\n" "\n${redColour}${rev}[!] Exiting...${endColour}"
-    tput cnorm
-    [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && sudo rm -rf "${INSTALL_DIR:?}"/*
-    find "${USER_HOME}" -type d -name "${}" -exec rm -rf {} \; 2>/dev/null 
+    [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR:?No se borro la carpeta de instalación temporal}"/*
+    find "${USER_HOME}" -type d -name "${INSTALL_DIR}" -exec rm -rf {} \; 2>/dev/null 
     set +e
+    tput cnorm
     exit 1
   fi
-
   printf "%b\n" "\n${redColour}${grisBg}${bold}[x] Presiona CTRL+C dos veces seguidas para salir${endColour}"
   last=$now
   # Prevenir que el script continúe después del primer CTRL+C
@@ -134,9 +132,9 @@ function check_os() {
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
     # Creamos directorios de trabajo
-    sudo -u "${SUDO_USER}" mkdir -p "${INSTALL_DIR}"
+    sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
     sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit
     if [[ ! -f /etc/os-release ]]; then 
        printf "%b\n" "\n${redColour}${rev}The system is not permitive${endColour}"    
        helpPanel
@@ -146,19 +144,19 @@ function check_os() {
       kali|parrot|ubuntu|debian)
         printf "%b\n" "\n${greenColour}${grisBg}${bold}The system is Debian${endColour}"
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}"
-        apt remove --purge codium -y
-        apt remove --purge vi -y
-        apt remove --purge vim -y
-        apt remove --purge vin -y
-        apt remove --purge nvim -y
-        apt remove --purge neovim -y
+        apt-get remove --purge codium -y
+        apt-get remove --purge vim -y
+        apt-get remove --purge nvim -y
+        apt-get remove --purge neovim -y
+        rm /usr/share/applications/nvim.desktop
+        rm /usr/share/applications/vim.desktop
         apt update -y 
 
         # Paquetes BSPWM + POLYBAR + Escritorio => Debian
 
         packages_bspwm_debian=(
         # Core BSPWM + Polybar
-        curl wget git dpkg gnupg gdb cmake net-tools plocate
+        curl wget git dpkg gnupg gdb cmake net-tools plocate p7zip-full
         
         # Dependencias de compilación BSPWM
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
@@ -213,7 +211,7 @@ function check_os() {
         fontconfig)
 
         for package in "${packages_bspwm_debian[@]}"; do
-          if apt install "${APT_FLAGS[@]}" "${package}"; then
+          if apt-get install "${APT_FLAGS[@]}" "${package}"; then
               printf "%b\n" "${greenColour}${rev}The package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly.${endColour}"
           else
               printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
@@ -222,16 +220,17 @@ function check_os() {
 
         dpkg --configure -a &>/dev/null
         apt --fix-broken --fix-missing install &>/dev/null
+        apt-mark manual neovim vim btop figlet
         apt autoremove -y &>/dev/null
         apt-get clean &>/dev/null
         apt autoclean &>/dev/null
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
-        cd "${INSTALL_DIR}"
+        cd "${INSTALL_DIR}" || exit 1
 
         # Clone repos bspwm and sxhkdrc 
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
+        sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
         make install
@@ -241,10 +240,10 @@ function check_os() {
 
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${SUDO_USER}" cp * -r "${USER_HOME}/.config/polybar"
+        sudo -u "${REAL_USER}" cp * -r "${USER_HOME}/.config/polybar"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -256,8 +255,8 @@ function check_os() {
 
         # Picom Compilation
         printf "%b\n" "${greenColour}${rev}Picom compilation.${endColour}"
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/ibhagwan/picom.git
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
         cd picom/
         git submodule update --init --recursive
         meson --buildtype=release . build
@@ -266,8 +265,8 @@ function check_os() {
 
         # Polybar Compilation
         printf "%b\n" "${greenColour}${rev}Polybar compilation.${endColour}"
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         mkdir build
         cd build/
@@ -336,7 +335,7 @@ function check_os() {
         mpd mpc ncmpcpp mpv
     
         # Utilidades varias de escritorio
-        htop eza)
+        htop eza p7zip)
 
         for package in "${packages_bspwm_arch[@]}"; do
           if pacman -S "${package}" --noconfirm --needed ; then
@@ -348,33 +347,33 @@ function check_os() {
 
         # Instalacion de Paru, y dependecias para blackarch
 
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/paru-bin.git
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" curl -O https://blackarch.org/strap.sh
+        sudo -u "${REAL_USER}" makepkg -si --noconfirm
+        cd "${INSTALL_DIR}" || exit
+        sudo -u "${REAL_USER}" curl -O https://blackarch.org/strap.sh
         sudo chmod +x strap.sh
         ./strap.sh
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/snapd.git       
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/snapd.git       
         cd "${INSTALL_DIR}/snapd"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
+        sudo -u "${REAL_USER}" makepkg -si --noconfirm
         systemctl enable --now snapd.socket
         systemctl restart snapd.service
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://aur.archlinux.org/yay.git
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
-        sudo -u "${SUDO_USER}" makepkg -si --noconfirm
-        sudo -u "${{SUDO_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
+        sudo -u "${REAL_USER}" makepkg -si --noconfirm
+        sudo -u "${REAL_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip xwinwrap-0.9-bin simple-mtpfs --noconfirm
         pacman -Syu --overwrite '*' --noconfirm
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
-        cd "${INSTALL_DIR}"
+        cd "${INSTALL_DIR}" || exit 1
 
         # Clone repos bspwm and sxhkdrc 
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/bspwm.git
-        sudo -u "${SUDO_USER}" git clone https://github.com/baskerville/sxhkd.git
+        sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
+        sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
         cd "${INSTALL_DIR}/bspwm/"
         make
         make install
@@ -384,10 +383,10 @@ function check_os() {
 
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${SUDO_USER}" rm -r "${USER_HOME}/.config/polybar/*"
+        sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -404,8 +403,8 @@ function check_os() {
         mkswap /swapfile
         swapon /swapfile
         printf "%b\n" "${redColour}${grisBg}${bold}If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
-        cd "${INSTALL_DIR}"
-        sudo -u "${SUDO_USER}" git clone --recursive https://github.com/polybar/polybar
+        cd "${INSTALL_DIR}" || exit 1
+        sudo -u "${REAL_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         rm -rf build
         mkdir build
@@ -430,30 +429,14 @@ function bspwm_enviroment() {
   printf "%b\n" "${greenColour}${rev}Install Foo Wallpaper.${endColour}"
   curl -L https://raw.githubusercontent.com/thomas10-10/foo-Wallpaper-Feh-Gif/master/install.sh | bash &>/dev/null
 
-  # Copiar archivos 
-  printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
-  sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
-  chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
-  chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
-  chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
-  chmod +x "${USER_HOME}/.config/picom/picom.conf"
-  chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
-  ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
-
   # Install powerlevel10k
   printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
-  sudo -u "${SUDO_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
+  sudo -u "${REAL_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
   # Install Fonts Hack nerd-fonts
   printf "%b\n" "${greenColour}${rev}Install Hack Nerd Fonts.${endColour}"
-  cd "${INSTALL_DIR}" 
+  cd "${INSTALL_DIR}" || exit 
   wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Hack.zip
   mkdir -p /usr/local/share/fonts/
   unzip Hack.zip > /dev/null 2>&1 && sudo mv *.ttf /usr/local/share/fonts/
@@ -464,8 +447,8 @@ function bspwm_enviroment() {
 
   # Install Wallpaper
   printf "%b\n" "${greenColour}${rev}Configuration wallpaper.${endColour}"
-  cd "${INSTALL_DIR}" 
-  sudo -u "${SUDO_USER}" mkdir -p "${USER_HOME}/Pictures"
+  cd "${INSTALL_DIR}" || exit 1
+  sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/Pictures"
   cp "${INSTALL_DIR}"/Entorno-BSPWN/*.png "${USER_HOME}/Pictures" 
   cp "${INSTALL_DIR}"/Entorno-BSPWN/*.gif "${USER_HOME}/Pictures"
   printf "%b\n" "${greenColour}${rev}Install plugin sudo.${endColour}"
@@ -475,26 +458,26 @@ function bspwm_enviroment() {
 
   # Install Batcat
   printf "%b\n" "${greenColour}${rev}Install batcat.${endColour}"
-  cd "${INSTALL_DIR}" 
+  cd "${INSTALL_DIR}" || exit 1
   wget -q https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-musl_0.24.0_amd64.deb
   dpkg -i bat-musl_0.24.0_amd64.deb
 
   # Install LSD
   printf "%b\n" "${greenColour}${rev}Install lsd.${endColour}"
-  cd "${INSTALL_DIR}" 
+  cd "${INSTALL_DIR}" || exit 1 
   wget -q https://github.com/lsd-rs/lsd/releases/download/v1.0.0/lsd-musl_1.0.0_amd64.deb
   dpkg -i lsd-musl_1.0.0_amd64.deb
 
   # Install fzf
   printf "%b\n" "${greenColour}${rev}Install fzf.${endColour}"
-  sudo -u "${SUDO_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
-  sudo -u "${SUDO_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
+  sudo -u "${REAL_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf" &>/dev/null
+  sudo -u "${REAL_USER}" "${USER_HOME}/.fzf/install" --all &>/dev/null
   git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf &>/dev/null
   ~/.fzf/install --all &>/dev/null
 
   # Install NvChad 
   printf "%b\n" "${greenColour}${rev}Install nvcahd.${endColour}" 
-  cd "${INSTALL_DIR}" 
+  cd "${INSTALL_DIR}" || exit 1
   # 1. Descargar el tarball oficial
   wget -q https://github.com/neovim/neovim/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
   # 2. Extraer el contenido
@@ -505,8 +488,8 @@ function bspwm_enviroment() {
   ln -s /opt/nvim/bin/nvim /usr/bin/nvim
   # 5. (Opcional) Limpiar el tarball descargado
   rm nvim-linux-x86_64.tar.gz
-  sudo -u "${SUDO_USER}" rm -rf "${USER_HOME}/.config/nvim" 
-  sudo -u "${SUDO_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
+  sudo -u "${REAL_USER}" rm -rf "${USER_HOME}/.config/nvim" 
+  sudo -u "${REAL_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim" && nvim --headless '+Lazy! sync' +qa
   line="vim.opt.listchars = { tab = '»·', trail = '.' }"
   sed -i "3i ${line}" "${USER_HOME}/.config/nvim/init.lua"
   rm -rf /root/.config/nvim
@@ -515,7 +498,7 @@ function bspwm_enviroment() {
   sed -i "3i ${line}" "/root/.config/nvim/init.lua"
   
   printf "%b\n" "${greenColour}${rev}Install themes polybar.${endColour}"
-  cd "${INSTALL_DIR}"
+  cd "${INSTALL_DIR}" || exit 1
   git clone https://github.com/adi1090x/polybar-themes.git
   cd polybar-themes
   cp "${INSTALL_DIR}/Entorno-BSPWN/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
@@ -528,6 +511,22 @@ function bspwm_enviroment() {
   #--forest    --grayblocks     --hack      --material
   #--panels    --pwidgets       --shades    --shapes
 
+  # Copiar archivos 
+  printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
+  chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
+  chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
+  chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
+  chmod +x "${USER_HOME}/.config/picom/picom.conf"
+  chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
+  ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
+  
   case "${entorno,,}" in
     si|y|yes|yey)
       printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
@@ -535,12 +534,9 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      sudo -u "${SUDO_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-
-
+      sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
       printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
-
+      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
     ;;
     ""|n|no|nay)
       chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
@@ -555,7 +551,7 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/styles.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/updates.sh"
       printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
+      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
     ;;
     *)
     printf "%b\n" "${yellowColour}[!] Respuesta no válida.${endColour}"
@@ -564,20 +560,20 @@ function bspwm_enviroment() {
   esac
   tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
   ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
-  chown "${SUDO_USER}:${SUDO_USER}" "${USER_HOME}/.zshrc"
-  usermod --shell /usr/bin/zsh "$SUDO_USER"
+  chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
+  usermod --shell /usr/bin/zsh "$REAL_USER"
   usermod --shell /usr/bin/zsh root
-  chown "${SUDO_USER}:${SUDO_USER}" "/root"
-  chown "${SUDO_USER}:${SUDO_USER}" "/root/.cache" -R
-  chown "${SUDO_USER}:${SUDO_USER}" "/root/.local" -R
+  chown "${REAL_USER}:${REAL_USER}" "/root"
+  chown "${REAL_USER}:${REAL_USER}" "/root/.cache" -R
+  chown "${REAL_USER}:${REAL_USER}" "/root/.local" -R
   updatedb
 }
 
 function update_debian() {
     printf "%b\n" "${greenColour}${rev}Installing additional packages for the correct functioning of the environment.${endColour}"
-    cd "${INSTALL_DIR}"
-    apt remove --purge python3-unicodecsv -y
-    apt remove --purge burpsuite -y
+    cd "${INSTALL_DIR}" || exit 1
+    apt-get remove --purge python3-unicodecsv -y
+    apt-get remove --purge burpsuite -y
 
     # Verificar si es Kali Linux y configurar wine
     if [[ -f /etc/os-release && $(grep -q "kali" /etc/os-release; echo $?) -eq 0 ]]; then
@@ -711,7 +707,7 @@ function update_debian() {
 
 function update_arch(){
     printf "%b\n" "${greenColour}Additional packages will be installed for the correct functioning of the environment.${endColour}"
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit
     
     # Listado único de todos los paquetes agrupados
     packages_tools_arch=(
@@ -833,8 +829,8 @@ function core_package(){
     python3 -m pip install --upgrade pip pipx pwntools pyparsing
 
     # Instalación con pipx
-    pipx install git+https://github.com/brightio/penelope
     pipx install posting donpapi
+    pipx install git+https://github.com/brightio/penelope
     pipx install git+https://github.com/blacklanternsecurity/MANSPIDER 
     
     # Herramientas de pentesting (NO disponibles en APT o versión muy vieja)
@@ -853,90 +849,90 @@ function core_package(){
 
     # Install GO y Apps
     printf "%b\n" "${greenColour}${rev}Install go.${endColour}"
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit 1
 
-    sudo wget -q https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
-	 sudo rm -rf /usr/local/go && tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
+    wget -q https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
+	 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
 
-	 sudo go install github.com/hakluke/hakrawler@latest
-	 sudo mv ~/go/bin/hakrawler /usr/local/bin/
+	 go install github.com/hakluke/hakrawler@latest
+	 mv ~/go/bin/hakrawler /usr/local/bin/
 
-	 sudo go install github.com/tomnomnom/waybackurls@latest
-	 sudo mv ~/go/bin/waybackurls /usr/local/bin/
+	 go install github.com/tomnomnom/waybackurls@latest
+	 mv ~/go/bin/waybackurls /usr/local/bin/
 
-	 sudo go install github.com/lc/gau/v2/cmd/gau@latest
-	 sudo mv ~/go/bin/gau /usr/local/bin/
+	 go install github.com/lc/gau/v2/cmd/gau@latest
+	 mv ~/go/bin/gau /usr/local/bin/
 
-	 sudo go install github.com/ropnop/kerbrute@latest
-	 sudo mv ~/go/bin/kerbrute /usr/local/bin/
+	 go install github.com/ropnop/kerbrute@latest
+	 mv ~/go/bin/kerbrute /usr/local/bin/
 
-	 sudo go install -v github.com/rverton/webanalyze/cmd/webanalyze@latest
-	 sudo mv ~/go/bin/webanalyze /usr/local/bin/
+	 go install -v github.com/rverton/webanalyze/cmd/webanalyze@latest
+	 mv ~/go/bin/webanalyze /usr/local/bin/
 	 
-    sudo go install github.com/benbusby/namebuster@latest
-    sudo mv ~/go/bin/namebuster /usr/local/bin/
+    go install github.com/benbusby/namebuster@latest
+    mv ~/go/bin/namebuster /usr/local/bin/
 
-    sudo go install github.com/Josue87/gotator@latest
-    sudo mv ~/go/bin/gotator /usr/local/bin/ 
+    go install github.com/Josue87/gotator@latest
+    mv ~/go/bin/gotator /usr/local/bin/ 
 
-    sudo go install github.com/d3mondev/puredns/v2@latest
-    sudo mv ~/go/bin/puredns /usr/local/bin/ 
+    go install github.com/d3mondev/puredns/v2@latest
+    mv ~/go/bin/puredns /usr/local/bin/ 
 
-    sudo go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-    sudo mv ~/go/bin/grpcurl /usr/local/bin/
+    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    mv ~/go/bin/grpcurl /usr/local/bin/
 
-    sudo go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
-    sudo mv ~/go/bin/subfinder /usr/local/bin/ 
+    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
+    mv ~/go/bin/subfinder /usr/local/bin/ 
 
-    sudo go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest 
-    sudo mv ~/go/bin/dnsx /usr/local/bin/
+    go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest 
+    mv ~/go/bin/dnsx /usr/local/bin/
 
-    sudo go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest CGO_ENABLED=1 
-    sudo mv ~/go/bin/httpx /usr/local/bin/ 
+    go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest CGO_ENABLED=1 
+    mv ~/go/bin/httpx /usr/local/bin/ 
 
-    sudo go install github.com/projectdiscovery/katana/cmd/katana@latest
-    sudo mv ~/go/bin/katana /usr/local/bin/ 
+    go install github.com/projectdiscovery/katana/cmd/katana@latest
+    mv ~/go/bin/katana /usr/local/bin/ 
    
     # Install snap
     printf "%b\n" "${greenColour}${rev}Install snap tools.${endColour}"
-    sudo snap install ngrok storage-explorer
-    sudo snap install snapcraft kubectl --classic
+    snap install ngrok storage-explorer
+    snap install snapcraft kubectl --classic
 
     # Istall npm
     printf "%b\n" "${greenColour}${rev}Install npm tools.${endColour}"
-    sudo npm install -g safe-backup wscat asar memcached-cli node-serialize slendr electron-packager
-    cd "${INSTALL_DIR}"
+    npm install -g safe-backup wscat asar memcached-cli node-serialize slendr electron-packager
+    cd "${INSTALL_DIR}" || exit 1
     git clone https://github.com/qtc-de/remote-method-guesser
     cd remote-method-guesser
     mvn package
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit 1
     git clone https://github.com/CravateRouge/bloodyAD.git
     cd bloodyAD
     pip3 install . 
    
     # Istall Docker Compose
     printf "%b\n" "${greenColour}Install docker Compose.${endColour}"
-    cd "${INSTALL_DIR}"
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    sudo usermod -aG docker ${SUDO_USER}
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit 1
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    usermod -aG docker ${REAL_USER}
+    cd "${INSTALL_DIR}" || exit 1
     sleep 1
 
     # Esto es nesesario para instalar AvaloniaILSpy.
     printf "%b\n" "${greenColour}${rev}Adding Microsoft repository.${endColour}"
-    cd "${INSTALL_DIR}"
-    sudo wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-    sudo dpkg -i packages-microsoft-prod.deb
-    sudo rm packages-microsoft-prod.deb
+    cd "${INSTALL_DIR}" || exit 1
+    wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    dpkg -i packages-microsoft-prod.deb
+    rm packages-microsoft-prod.deb
 
     # Install AvaloniaILSpy
     printf "%b\n" "${yellowColour}Install AvaloniaILSpy.${endColour}"
     mkdir -p "${OPT_DIR}/AvaloniaILSpy"
     cd "${OPT_DIR}/AvaloniaILSpy"
     wget -q https://github.com/icsharpcode/AvaloniaILSpy/releases/download/v7.2-rc/Linux.x64.Release.zip
-    mv /home/$SUDO_USER/Downloads/Linux.x64.Release.zip .
+    mv /home/$REAL_USER/Downloads/Linux.x64.Release.zip .
     unzip Linux.x64.Release.zip
     rm Linux.x64.Release.zip
     unzip ILSpy-linux-x64-Release.zip
@@ -945,35 +941,35 @@ function core_package(){
 
     # Install RustScan
     printf "%b\n" "${greenColour}${rev}Install rustscan.${endColour}"
-    cd "${INSTALL_DIR}"
-    sudo curl -sL https://github.com/bee-san/RustScan/releases/download/2.3.0/rustscan_2.3.0_amd64.deb -o rustscan_2.3.0_amd64.deb 
-    sudo dpkg -i rustscan_2.3.0_amd64.deb
+    cd "${INSTALL_DIR}" || exit 1
+    curl -sL https://github.com/bee-san/RustScan/releases/download/2.3.0/rustscan_2.3.0_amd64.deb -o rustscan_2.3.0_amd64.deb 
+    dpkg -i rustscan_2.3.0_amd64.deb
 
     # Install Feroxbuster
     printf "%b\n" "${greenColour}${rev}Install Feroxbuster.${endColour}"
-    cd "${INSTALL_DIR}"
-    sudo curl -sL https://github.com/epi052/feroxbuster/releases/download/v2.11.0/feroxbuster_amd64.deb.zip -o feroxbuster_amd64.deb.zip
-    sudo 7z x feroxbuster_amd64.deb.zip
-    sudo dpkg -i feroxbuster_2.11.0-1_amd64.deb
+    cd "${INSTALL_DIR}" || exit 1
+    curl -sL https://github.com/epi052/feroxbuster/releases/download/v2.11.0/feroxbuster_amd64.deb.zip -o feroxbuster_amd64.deb.zip
+    7z x feroxbuster_amd64.deb.zip
+    dpkg -i feroxbuster_2.11.0-1_amd64.deb
 
     # Install fastTCPscan
-    sudo cp "${INSTALL_DIR}/Entorno-BSPWN/fastTCPscan.go" "/opt/fastTCPscan"
-    sudo chmod 755 /opt/fastTCPscan
-    sudo ln -s -f "/opt/fastTCPscan" "/usr/local/bin/fastTCPscan"
+    cp "${INSTALL_DIR}/Entorno-BSPWN/fastTCPscan.go" "/opt/fastTCPscan"
+    chmod 755 /opt/fastTCPscan
+    ln -s -f "/opt/fastTCPscan" "/usr/local/bin/fastTCPscan"
 
     # Install whichSystem
-    sudo mkdir -p /opt/whichSystem
+    mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWN/whichSystem.py" "/opt/whichSystem/whichSystem.py"
-    sudo ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
+    ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
 
 	  # Install VSC
     printf "%b\n" "${greenColour}${rev}Install VSC.${endColour}"
-    sudo curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
-    sudo dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
+    curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
+    dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
     
     # Install Curlie
     printf "%b\n" "${greenColour}${rev}Install curlie.${endColour}"
-	  sudo curl -sS https://webinstall.dev/curlie | bash
+	 curl -sS https://webinstall.dev/curlie | bash
     
     # Install Gef
     printf "%b\n" "${greenColour}${rev}Install Gef.${endColour}"
@@ -985,15 +981,15 @@ function repositories(){
 
     # Install incursore
     printf "%b\n" "${yellowColour}Install incursore.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/wirzka/incursore.git
-    sudo ln -s $(pwd)/incursore/incursore.sh /usr/local/bin/incursore
+    ln -s $(pwd)/incursore/incursore.sh /usr/local/bin/incursore
     #incursore.sh -h
 
     : '
     # Install WhatWaf
     printf "%b\n" "${greenColour}${rev}Install WhatWaf.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/Ekultek/WhatWaf
     cd WhatWaf
     python3 setup.py install
@@ -1001,7 +997,7 @@ function repositories(){
  
     # Install bfac
     printf "%b\n" "${yellowColour}Install bfac.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/mazen160/bfac
     cd bfac
     python3 setup.py install
@@ -1009,46 +1005,45 @@ function repositories(){
 
     # Install Postman
     printf "%b\n" "${yellowColour}Install Postman.${endColour}"
-    cd "${OPT_DIR}"
-    sudo wget -q --content-disposition https://dl.pstmn.io/download/latest/linux_64
-    sudo tar -xzvf ./postman-linux-x64.tar.gz
+    cd "${OPT_DIR}" || exit 1
+    wget -q --content-disposition https://dl.pstmn.io/download/latest/linux_64
+    tar -xzvf ./postman-linux-x64.tar.gz
     cd Postman
-    sudo ln -s /opt/Postman/Postman /usr/bin/
+    ln -s /opt/Postman/Postman /usr/bin/
     #Postman &>/dev/null & dsown
     
     # Install git-hound
     printf "%b\n" "${yellowColour}Install git-hound.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/tillson/git-hound
     cd git-hound
-    sudo go build .
-    sudo go build -ldflags "-s -w" .
-    sudo upx git-hound
-    sudo upx --brute git-hound .
+    go build .
+    go build -ldflags "-s -w" .
+    upx --brute git-hound .
 
     # Install nmapAutomator
     printf "%b\n" "${yellowColour}Install nmapAutomator.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/21y4d/nmapAutomator.git
-    sudo ln -s $(pwd)/nmapAutomator/nmapAutomator.sh /usr/local/bin/
+    ln -s $(pwd)/nmapAutomator/nmapAutomator.sh /usr/local/bin/
     #nmapAutomator.sh -h
 
     # Install Reconnoitre
     printf "%b\n" "${yellowColour}Install Reconnoitre.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/codingo/Reconnoitre.git
     cd Reconnoitre
     python3 setup.py install
     #reconnoitre --help
 
     printf "%b\n" "${greenColour}${rev}Install DockerRegistryGrabber.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone git@github.com:Syzik/DockerRegistryGrabber.git  
     cd DockerRegistryGrabber
     python -m pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install bruteforce-luks.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/glv2/bruteforce-luks
     cd bruteforce-luks
     ./autogen.sh
@@ -1058,113 +1053,113 @@ function repositories(){
     make install
 
     printf "%b\n" "${greenColour}${rev}Install dnsvalidator.${endColour}"
-    cd "${OPT_DIR}"
-    https://github.com/vortexau/dnsvalidator  
+    cd "${OPT_DIR}" || exit 1
+    git clone https://github.com/vortexau/dnsvalidator  
     cd dnsvalidator
     python3 setup.py install
 
     printf "%b\n" "${greenColour}${rev}Install firepwd.${endColour}"
-    cd "${OPT_DIR}"
-    https://github.com/lclevy/firepwd
+    cd "${OPT_DIR}" || exit 1
+    git clone https://github.com/lclevy/firepwd
     cd firepwd
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install Forbidden-Buster.${endColour}"
-    cd "${OPT_DIR}"
-    https://github.com/Sn1r/Forbidden-Buster
+    cd "${OPT_DIR}" || exit 1
+    git clone https://github.com/Sn1r/Forbidden-Buster
     cd Forbidden-Buster
     pip3 install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install forbiddenpass.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/gotr00t0day/forbiddenpass
     cd forbiddenpass
     pip3 install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install bopscrk.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone --recurse-submodules https://github.com/r3nt0n/bopscrk 
     cd bopscrk
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install jwtcat.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/AresS31/jwtcat  
     cd jwtcat
     git clone https://github.com/ticarpi/jwt_too
 
     printf "%b\n" "${greenColour}${rev}Install nmap-parse-output.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/LorenzoTullini/InfluxDB-Exploit-CVE-2019-20933.git
     cd InfluxDB-Exploit-CVE-2019-20933
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install nmap-parse-output.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/ernw/nmap-parse-output.git
     cd nmap-parse-output
     ./nmap-parse-output
 
     printf "%b\n" "${greenColour}${rev}Install nullinux.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/m8sec/nullinux 
     cd nullinux
     sudo bash setup.sh
 
     printf "%b\n" "${greenColour}${rev}Install NoMoreForbidden.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/akinerkisa/NoMoreForbidden 
     cd NoMoreForbidden
     pip install -r requirements.txt
     
     printf "%b\n" "${greenColour}${rev}Install ctfr.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/UnaPibaGeek/ctfr
     cd ctfr
     pip3 install -r requirements.txt
     
     printf "%b\n" "${greenColour}${rev}Install reconftw.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/six2dez/reconftw
     cd reconftw
     ./install.sh
     ./reconftw.sh -d target.com -r
 
     printf "%b\n" "${greenColour}${rev}Install hcxtools.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/ZerBea/hcxtools
     cd hcxtools
     make -j $(nproc)
     make install
 
     printf "%b\n" "${greenColour}${rev}Install hcxdumptool.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/ZerBea/hcxdumptool
     cd hcxdumptool
     make -j $(nproc)
     make install
 
     printf "%b\n" "${greenColour}${rev}Install Gopherus.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/tarunkant/Gopherus
     cd Gopherus
     chmod +x install.sh
     sudo ./install.sh
 
     printf "%b\n" "${greenColour}${rev}Install remote-method-guesser.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/qtc-de/remote-method-guesser
     cd remote-method-guesser
     mvn package
 
     printf "%b\n" "${greenColour}${rev}Install uDork.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/m3n0sd0n4ld/uDork
     cd uDork
     chmod +x uDork.sh
 
     printf "%b\n" "${greenColour}${rev}Install Veil.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/Veil-Framework/Veil
     cd Veil/
     ./config/setup.sh --force --silent
@@ -1175,13 +1170,13 @@ function repositories(){
     cd trufflehog; go install
 
     printf "%b\n" "${greenColour}${rev}Install targetedKerberoast.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/ShutdownRepo/targetedKerberoast
     cd targetedKerberoast
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install sucrack.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/hemp3l/sucrack
     cd sucrack
     ./configure
@@ -1189,62 +1184,62 @@ function repositories(){
     make install
 
     printf "%b\n" "${greenColour}${rev}Install spose.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/aancw/spose
     cd spose
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install SirepRAT.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/SafeBreach-Labs/SirepRAT.git
     cd SirepRAT
     pip install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install sippts.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/Pepelux/sippts.git
     cd sippts
     pip3 install .
 
     printf "%b\n" "${greenColour}${rev}Install WPSeku.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/m4ll0k/WPSeku.git wpseku
     cd wpseku
     pip3 install -r requirements.txt
     python3 wpseku.py
 
     printf "%b\n" "${greenColour}${rev}Install wifi_db.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/r4ulcl/wifi_db
     cd wifi_db
     pip3 install -r requirements.txt 
 
     printf "%b\n" "${greenColour}${rev}Install wifiphisher.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/wifiphisher/wifiphisher.git # Download the latest revision
     cd wifiphisher 
     python setup.py install # Install any dependencies
 
     printf "%b\n" "${greenColour}${rev}Install wifite2.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/derv82/wifite2.git
     cd wifite2
     python setup.py install 
 
     printf "%b\n" "${greenColour}${rev}Install windapsearch.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/ropnop/windapsearch.git
     cd windapsearch
     ./windapsearch.py
 
     printf "%b\n" "${greenColour}${rev}Install RubeusToCcache.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone https://github.com/SolomonSklash/RubeusToCcache
     cd RubeusToCcache
     pip3 install -r requirements.txt
 
     printf "%b\n" "${greenColour}${rev}Install WebAssembly.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     git clone --recursive https://github.com/WebAssembly/wabt
     cd wabt
     git submodule update --init  
@@ -1254,7 +1249,7 @@ function repositories(){
     cmake --build .
 
     printf "%b\n" "${greenColour}${rev}Install + Tools.${endColour}"
-    cd "${OPT_DIR}"
+    cd "${OPT_DIR}" || exit 1
     # Download Repositories in local
     git clone https://github.com/ropnop/kerbrute /opt/kerbrute
     git clone https://github.com/nicocha30/ligolo-ng.git /opt/ligolo-ng
@@ -1360,29 +1355,29 @@ function repositories(){
 
 # Instalar Entorno de LaTeX
 function latex_env(){
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit 1
     wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v1.10.3/obsidian_1.10.3_amd64.deb
-    sudo dpkg -i obsidian_1.10.3_amd64.deb
+    dpkg -i obsidian_1.10.3_amd64.deb
     printf "%b\n" "${greenColour}${rev}The latex environment will be installed, this will take more than 30 minutes approximately..${endColour}"
     
     if [[ -f /etc/arch-release ]]; then
         pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
     else
         # Para Kali, Parrot, Ubuntu y otros sistemas basados en Debian
-        apt install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
+        apt-get install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
     fi
 }
 
 # Spotify solo funciona para forest porque no lo he usado en otros temas
 function spotify_env(){
-    cd "${INSTALL_DIR}"
+    cd "${INSTALL_DIR}" || exit 1
     git clone https://github.com/noctuid/zscroll
     cd zscroll
     python3 setup.py install
     
     # Configuración de polybar
     rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    sudo -u "${SUDO_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
+    sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
     
     printf "%b\n" "${greenColour}${rev}Instalando Spotify.${endColour}"
     
@@ -1393,7 +1388,7 @@ function spotify_env(){
         systemctl is-enabled --quiet mpd.service
     else
         # Para Kali, Parrot, Ubuntu
-        apt install playerctl -y
+        apt-get install playerctl -y
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
         apt-get update
@@ -1406,7 +1401,6 @@ function clean_bspwm() {
     printf "%b\n" "${greenColour}${rev}Limpiando todo.${endColour}"
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
     [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && sudo rm -rf "${INSTALL_DIR:?}"/*
-    sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec rm -rf {} \; 2>/dev/null 
     
     # Usar la variable operative_sistem para determinar las acciones de limpieza
     if [[ -f /etc/arch-release ]]; then
@@ -1439,6 +1433,7 @@ function shutdown_session(){
 }
 
 declare -i parameter_counter=0
+Mode=""
 core_tools=false
 repositories=false
 latex=false
