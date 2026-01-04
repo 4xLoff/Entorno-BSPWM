@@ -132,7 +132,9 @@ function check_os() {
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
     # Creamos directorios de trabajo    
-    
+
+	sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
+	
     ENTORNOS=()
 
     while IFS= read -r dir; do
