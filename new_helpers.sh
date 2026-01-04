@@ -132,9 +132,9 @@ function check_os() {
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
     # Creamos directorios de trabajo    
-
-	sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
-	
+    
+    sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
+    
     ENTORNOS=()
 
     while IFS= read -r dir; do
@@ -143,18 +143,15 @@ function check_os() {
     done < <(
         find "${USER_HOME}" \
             -type d \
-            -name "Entorno-BSPWN" \
+            -name "Entorno-BSPWM" \
             -not -path "${INSTALL_DIR}/*"
     )
 
     if (( ${#ENTORNOS[@]} > 0 )); then
-        sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
         for dir in "${ENTORNOS[@]}"; do
            sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
            echo "[+] Movido: $dir → ${INSTALL_DIR}/"
         done
-    else
-       echo "[i] Entorno-BSPWN no encontrado en ${USER_HOME}"
     fi
     
     cd "${INSTALL_DIR}" || exit 1
@@ -179,7 +176,7 @@ function check_os() {
 
         packages_bspwm_debian=(
         # Core BSPWM + Polybar
-        curl wget git dpkg gnupg gdb cmake net-tools plocate p7zip-full
+        curl wget git dpkg gnupg gdb cmake net-tools plocate p7zip-full meson ninja-build 
         
         # Dependencias de compilación BSPWM
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
@@ -310,7 +307,7 @@ function check_os() {
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
         # Core BSPWM + Polybar
-        git base-devel curl wget cmake dpkg net-tools plocate gnome
+        git base-devel curl wget cmake dpkg net-tools plocate gnome meson ninja
         
         # Dependencias XCB
         libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms cronie
@@ -472,8 +469,8 @@ function bspwm_enviroment() {
   printf "%b\n" "${greenColour}${rev}Configuration wallpaper.${endColour}"
   cd "${INSTALL_DIR}" || exit 1
   sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/Pictures"
-  cp "${INSTALL_DIR}"/Entorno-BSPWN/*.png "${USER_HOME}/Pictures" 
-  cp "${INSTALL_DIR}"/Entorno-BSPWN/*.gif "${USER_HOME}/Pictures"
+  cp "${INSTALL_DIR}"/Entorno-BSPWM/*.png "${USER_HOME}/Pictures" 
+  cp "${INSTALL_DIR}"/Entorno-BSPWM/*.gif "${USER_HOME}/Pictures"
   printf "%b\n" "${greenColour}${rev}Install plugin sudo.${endColour}"
   mkdir /usr/share/zsh-sudo
   wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/sudo/sudo.plugin.zsh
@@ -524,7 +521,7 @@ function bspwm_enviroment() {
   cd "${INSTALL_DIR}" || exit 1
   git clone https://github.com/adi1090x/polybar-themes.git
   cd polybar-themes
-  cp "${INSTALL_DIR}/Entorno-BSPWN/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
+  cp "${INSTALL_DIR}/Entorno-BSPWM/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
   cd "${INSTALL_DIR}/polybar-themes"
   chmod +x setup.sh
   ./setup.sh
@@ -536,13 +533,13 @@ function bspwm_enviroment() {
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/polybar/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/bspwm/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/sxhkd/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/picom/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/kitty/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWN/rofi/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/kitty/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/rofi/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
   chmod +x "${USER_HOME}/.config/sxhkd/sxhkdrc"
   chmod +x "${USER_HOME}/.config/bspwm/bspwmrc"
   chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
@@ -559,7 +556,7 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
       sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
       printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-arch" "${USER_HOME}/.zshrc" 
+      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc" 
     ;;
     ""|n|no|nay)
       chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
@@ -574,7 +571,7 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/styles.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/updates.sh"
       printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/.zshrc-debian" "${USER_HOME}/.zshrc"
+      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
     ;;
     *)
     printf "%b\n" "${yellowColour}[!] Respuesta no válida.${endColour}"
@@ -637,7 +634,7 @@ function update_debian() {
     
     # Build tools
     build-essential gcc gcc-multilib pkg-config
-    dh-autoreconf meson
+    dh-autoreconf 
     
     # Navegadores/visualizadores texto
     pandoc lynx dc
@@ -743,7 +740,7 @@ function update_arch(){
     
     # Herramientas básicas
     acl adb antiword autoconf make cmake 
-    meson pkg-config sudo dpkg
+    pkg-config sudo dpkg
     
     # Gestores de paquetes
     pacman pacman-contrib 
@@ -976,13 +973,13 @@ function core_package(){
     dpkg -i feroxbuster_2.11.0-1_amd64.deb
 
     # Install fastTCPscan
-    cp "${INSTALL_DIR}/Entorno-BSPWN/fastTCPscan.go" "/opt/fastTCPscan"
+    cp "${INSTALL_DIR}/Entorno-BSPWM/fastTCPscan.go" "/opt/fastTCPscan"
     chmod 755 /opt/fastTCPscan
     ln -s -f "/opt/fastTCPscan" "/usr/local/bin/fastTCPscan"
 
     # Install whichSystem
     mkdir -p /opt/whichSystem
-    cp "${INSTALL_DIR}/Entorno-BSPWN/whichSystem.py" "/opt/whichSystem/whichSystem.py"
+    cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
 
 	  # Install VSC
@@ -1400,7 +1397,7 @@ function spotify_env(){
     
     # Configuración de polybar
     rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWN/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
+    sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
     
     printf "%b\n" "${greenColour}${rev}Instalando Spotify.${endColour}"
     
