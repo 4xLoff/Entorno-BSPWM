@@ -131,10 +131,31 @@ function check_os() {
     # Entorno a uasr
     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
-    # Creamos directorios de trabajo
-    sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
-    sudo find "${USER_HOME}" -type d -name "Entorno-BSPWN" -exec mv {} "${INSTALL_DIR}" \; &>/dev/null
-    cd "${INSTALL_DIR}" || exit
+    # Creamos directorios de trabajo    
+    
+    ENTORNOS=()
+
+    while IFS= read -r dir; do
+        [[ -z "$dir" ]] && continue
+        ENTORNOS+=("$dir")
+    done < <(
+        find "${USER_HOME}" \
+            -type d \
+            -name "Entorno-BSPWN" \
+            -not -path "${INSTALL_DIR}/*"
+    )
+
+    if (( ${#ENTORNOS[@]} > 0 )); then
+        sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
+        for dir in "${ENTORNOS[@]}"; do
+           sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
+           echo "[+] Movido: $dir → ${INSTALL_DIR}/"
+        done
+    else
+       echo "[i] Entorno-BSPWN no encontrado en ${USER_HOME}"
+    fi
+    
+    cd "${INSTALL_DIR}" || exit 1
     if [[ ! -f /etc/os-release ]]; then 
        printf "%b\n" "\n${redColour}${rev}The system is not permitive${endColour}"    
        helpPanel
