@@ -50,11 +50,13 @@ DEBIAN_FRONTEND="noninteractive"
 DEBIAN_PRIORITY="critical"
 DEBCONF_NOWARNINGS="yes"
 export DEBIAN_FRONTEND DEBIAN_PRIORITY DEBCONF_NOWARNINGS
+export UCF_FORCE_CONFFNEW=YES
+
 
 [[ -f /etc/needrestart/needrestart.conf ]] && sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf &>/dev/null
 [[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf &>/dev/null
 [[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
-APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
+APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confnew")
 
 # Debe estar antes de todo por losmodos seguros
 function helpPanel() {
@@ -102,8 +104,7 @@ ctrl_c() {
   now=$(date +%s)
   if (( now - last < 1 )); then
     printf "%b\n" "\n${redColour}${rev}[!] Exiting...${endColour}"
-    [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR:?No se borro la carpeta de instalación temporal}"/*
-    find "${USER_HOME}" -type d -name "${INSTALL_DIR}" -exec rm -rf {} \; 2>/dev/null 
+    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
     set +e
     tput cnorm
     exit 1
@@ -168,8 +169,8 @@ function check_os() {
 
         packages_bspwm_debian=(
         # Core BSPWM + Polybar
-        curl wget git dpkg gnupg gdb cmake net-tools 
-        plocate p7zip-full meson ninja-build bspwm
+        curl wget dpkg gnupg gdb cmake net-tools 
+        p7zip-full meson ninja-build bspwm
         sxhkd picom polybar
         
         # Dependencias de compilación BSPWM
@@ -187,6 +188,11 @@ function check_os() {
         libxcb-present-dev libxcb-render0-dev
         libxcb-render-util0-dev libxcb-xfixes0-dev
         libxcb-xkb-dev libxcb-xrm-dev python-sphinx
+        libxcb-image0-dev libstartup-notification0-dev
+        libxkbcommon-dev libpango1.0-dev libglib2.0-dev
+        libjpeg-dev libcurl4-openssl-dev uthash-dev
+		  libev-dev libdbus-1-dev libconfig-dev
+
         
         # Características opcionales Polybar
         libasound2-dev libpulse-dev libjsoncpp-dev
@@ -224,14 +230,8 @@ function check_os() {
         # Fuentes
         fontconfig
         
-        # Otros
-        bc bd dc keepassxc html2text seclists locate
-        html2text libreoffice xpdf
-        
-        # Python
-        python3 python3-dev python3-pip python3-venv 
-        python3-qtpy ipython3 pipx docker docker-compose lxc 
-        chromium firefox ntfs-3g)
+        # Oros
+        bd bd seclists locate)
 
         for package in "${packages_bspwm_debian[@]}"; do
           if apt-get install "${APT_FLAGS[@]}" "${package}"; then
@@ -240,14 +240,6 @@ function check_os() {
               printf "%b\n" "${yellowColour}${rev}The package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install.${endColour}"
           fi
         done  
-
-        dpkg --configure -a &>/dev/null
-        apt --fix-broken --fix-missing install &>/dev/null
-        apt install --reinstall parrot-apps-basics
-        apt-mark manual parrot-apps-basics neovim vim btop figlet
-        apt autoremove -y &>/dev/null
-        apt-get clean &>/dev/null
-        apt autoclean &>/dev/null
 
         printf "%b\n" "${greenColour}${rev}Install bspwn and sxhkd.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
@@ -264,10 +256,10 @@ function check_os() {
 
         # Configuration polybar
         printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
+        cd "${INSTALL_DIR}" || exit 1        
         sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
         cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${REAL_USER}" cp * -r "${USER_HOME}/.config/polybar"
+        sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
         # Copiar fuentes
         cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -533,20 +525,15 @@ function bspwm_enviroment() {
   cd "${INSTALL_DIR}" || exit 1
   git clone https://github.com/adi1090x/polybar-themes.git
   cd polybar-themes
-  cp "${INSTALL_DIR}/Entorno-BSPWM/setup.sh" "${INSTALL_DIR}/polybar-themes/setup.sh"
-  cd "${INSTALL_DIR}/polybar-themes"
-  chmod +x setup.sh
-  ./setup.sh
-  # in bspwnrc
-  # Available Themes : --
-  #--blocks    --colorblocks    --cuts      --docky
-  #--forest    --grayblocks     --hack      --material
-  #--panels    --pwidgets       --shades    --shapes
+
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
+  sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
+  sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/polybar-themes/simple/." "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/forest"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/*" "${USER_HOME}/.config/polybar/"
+  sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/launch.sh"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/" "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/" "${USER_HOME}/.config/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/" "${USER_HOME}/.config/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/" "${USER_HOME}/.config/"
@@ -592,6 +579,7 @@ function bspwm_enviroment() {
   esac
   
   tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
+  sudo -u "${REAL_USER}" touch /tmp/name /tmp/target
   chown "${REAL_USER}:${REAL_USER}" "/tmp/name"
   chown "${REAL_USER}:${REAL_USER}" "/tmp/target"
   chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
@@ -641,7 +629,7 @@ function spotify_env(){
 function clean_bspwm() {
     printf "%b\n" "${greenColour}${rev}Limpiando todo.${endColour}"
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
-    [[ -n "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR:?No se borro la carpeta de instalación temporal}"/*
+    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
     
     # Usar la variable operative_sistem para determinar las acciones de limpieza
     if [[ -f /etc/arch-release ]]; then
@@ -656,8 +644,10 @@ function clean_bspwm() {
         systemctl enable --now cronie.service 2>/dev/null
     else
         apt update -y
-        dpkg --configure -a 
-        apt --fix-broken --fix-missing install 
+        dpkg --configure -a &>/dev/null
+        apt-get install "${APT_FLAGS[@]}" --fix-broken --fix-missing &>/dev/null
+        apt-get install --reinstall "${APT_FLAGS[@]}" parrot-apps-basics
+        apt-mark manual parrot-apps-basics neovim vim btop figlet
         apt -y --fix-broken --fix-missing full-upgrade
         apt -y full-upgrade
         apt autoremove -y
