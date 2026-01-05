@@ -525,7 +525,7 @@ function bspwm_enviroment() {
   
   
   while true; do
-    read -rp "$(printf "%b" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
+    read -rp "$(printf "%b" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
 
     case "${entorno,,}" in
       y|yes|yey)
@@ -555,7 +555,8 @@ function bspwm_enviroment() {
         break
       ;;
       *)
-        printf "%b\n" "\n${redColour:-}${rev:-}That option is invalid. Please enter a valid option.${endColour:-}\n" || true
+        printf "%b\n" "\n${redColour:-}${rev:-}That option is invalid. Please enter a valid option.${endColour:-}\n"
+        continue
       ;;
     esac
   done
