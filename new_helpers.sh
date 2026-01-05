@@ -158,8 +158,6 @@ function check_os() {
         printf "%b\n" "\n${greenColour}${grisBg}${bold}The system is Debian${endColour}"
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}"
         apt-get remove --purge codium -y
-        apt-get remove --purge vim -y
-        apt-get remove --purge nvim -y
         apt-get remove --purge neovim -y
         rm /usr/share/applications/nvim.desktop
         rm /usr/share/applications/vim.desktop
@@ -171,7 +169,7 @@ function check_os() {
         # Core BSPWM + Polybar
         curl wget dpkg gnupg gdb cmake net-tools 
         p7zip-full meson ninja-build bspwm
-        sxhkd picom polybar
+        sxhkd polybar libpcre3-dev 
         
         # Dependencias de compilación BSPWM
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
@@ -231,7 +229,7 @@ function check_os() {
         fontconfig
         
         # Oros
-        bd bd seclists locate)
+        bd bc seclists locate)
 
         for package in "${packages_bspwm_debian[@]}"; do
           if apt-get install "${APT_FLAGS[@]}" "${package}"; then
@@ -254,31 +252,6 @@ function check_os() {
         make
         make install 
 
-        # Configuration polybar
-        printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1        
-        sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
-        cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
-
-        # Copiar fuentes
-        cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
-        sudo mkdir -p /usr/share/fonts/truetype
-        cp * /usr/share/fonts/truetype/
-        pushd /usr/share/fonts/truetype &>/dev/null 
-        fc-cache -v
-        popd &>/dev/null 
-
-        # Picom Compilation
-        printf "%b\n" "${greenColour}${rev}Picom compilation.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
-        cd picom/
-        git submodule update --init --recursive
-        meson --buildtype=release . build
-        ninja -C build
-        ninja -C build install 
-
         # Polybar Compilation
         printf "%b\n" "${greenColour}${rev}Polybar compilation.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
@@ -295,10 +268,7 @@ function check_os() {
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Arch Linux${endColour}"
         
         pacman -Rns --noconfirm codium 
-        pacman -Rns --noconfirm vi 
-        pacman -Rns --noconfirm vim 
         pacman -Rns --noconfirm neovim
-        pacman -Rns --noconfirm nvim
                         
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
@@ -306,7 +276,7 @@ function check_os() {
         # Core BSPWM + Polybar
         git base-devel curl wget cmake dpkg net-tools rsync
         plocate gnome meson ninja bspwm sxhkd polybar picom
-        make zlib
+        make zlib pcre
         
         # Dependencias XCB
         libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms cronie
@@ -355,10 +325,7 @@ function check_os() {
         mpd mpc ncmpcpp mpv
     
         # Utilidades varias de escritorio
-        htop eza p7zip html2text libreoffice 
-        xpdf keepassxc docker docker-compose 
-        lxc python python-pip python-pipx pipx 
-        chromium firefox  bc locate ntfs-3g jq)
+        htop eza p7zip bc bd)
 
         for package in "${packages_bspwm_arch[@]}"; do
           if pacman -S "${package}" --noconfirm --needed ; then
@@ -403,21 +370,6 @@ function check_os() {
         cd "${INSTALL_DIR}/sxhkd/"
         make
         make install 
-
-        # Configuration polybar
-        printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
-        cd "${INSTALL_DIR}/blue-sky/polybar/"
-        sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
-
-        # Copiar fuentes
-        cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
-        mkdir -p /usr/share/fonts/truetype
-        cp * /usr/share/fonts/truetype/
-        pushd /usr/share/fonts/truetype &>/dev/null 
-        fc-cache -v
-        popd &>/dev/null 
         
         # Compilation polybar Arch Linux
         printf "%b\n" "${greenColour}${rev}Creating swap and compiling Polybar for Arch Linux .${endColour}"
@@ -452,12 +404,22 @@ function check_os() {
 function bspwm_enviroment() {
   printf "%b\n" "${greenColour}${rev}Install Foo Wallpaper.${endColour}"
   curl -L https://raw.githubusercontent.com/thomas10-10/foo-Wallpaper-Feh-Gif/master/install.sh | bash &>/dev/null
+   
+  # Configuration polybar fuentes
+  printf "%b\n" "${greenColour}${rev}Configure polybar fonts.${endColour}"
+  cd "${INSTALL_DIR}" || exit 1
+  sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
+  cd "${INSTALL_DIR}/blue-sky/polybar/"
+  sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
-  # Install powerlevel10k
-  printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
-  sudo -u "${REAL_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
-
+  # Copiar fuentes
+  cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
+  mkdir -p /usr/share/fonts/truetype
+  cp * /usr/share/fonts/truetype/
+  pushd /usr/share/fonts/truetype &>/dev/null 
+  fc-cache -v
+  popd &>/dev/null 
+  
   # Install Fonts Hack nerd-fonts
   printf "%b\n" "${greenColour}${rev}Install Hack Nerd Fonts.${endColour}"
   cd "${INSTALL_DIR}" || exit 
@@ -467,7 +429,23 @@ function bspwm_enviroment() {
   rm -f Hack.zip LICENSE.md README.md 2>/dev/null 
   pushd /usr/local/share/fonts/
   fc-cache -v
-  popd
+  popd &>/dev/null
+  
+  # Picom Compilation
+  printf "%b\n" "${greenColour}${rev}Picom compilation.${endColour}"
+  cd "${INSTALL_DIR}" || exit 1
+  sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
+  cd picom/
+  rm -rf build
+  git submodule update --init --recursive
+  meson --buildtype=release . build
+  ninja -C build
+  ninja -C build install 
+  
+  # Install powerlevel10k
+  printf "%b\n" "${greenColour}${rev}Download powerlevel10k.${endColour}"
+  sudo -u "${REAL_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
   # Install Wallpaper
   printf "%b\n" "${greenColour}${rev}Configuration wallpaper.${endColour}"
@@ -529,11 +507,10 @@ function bspwm_enviroment() {
 
   # Copiar archivos 
   printf "%b\n" "${greenColour}${rev}Move files configuration.${endColour}"
-  sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/polybar-themes/simple/." "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/forest"
+  sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/launch.sh"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/" "${USER_HOME}/.config/polybar/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/" "${USER_HOME}/.config/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/" "${USER_HOME}/.config/"
   sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/" "${USER_HOME}/.config/"
@@ -545,8 +522,6 @@ function bspwm_enviroment() {
   chmod +x "${USER_HOME}/.config/bspwm/scripts/bspwm_resize"
   chmod +x "${USER_HOME}/.config/picom/picom.conf"
   chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
-  chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-  chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
   ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
   
   case "${entorno,,}" in
@@ -554,9 +529,10 @@ function bspwm_enviroment() {
       printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
       chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
-      chmod +x "${USER_HOME}/.config/polybar/scripts/launcher.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
+      chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+      chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
       sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
       printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
       sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc" 
@@ -567,18 +543,18 @@ function bspwm_enviroment() {
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
-      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
       chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
       printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
       sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
     ;;
     *)
-    printf "%b\n" "${yellowColour}[!] Respuesta no válida.${endColour}"
+    printf "%b\n" "\n${redColour}${rev}That option is invalid.${endColour}"
     helpPanel
     ;;
   esac
   
   tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
+  chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
   sudo -u "${REAL_USER}" touch /tmp/name /tmp/target
   chown "${REAL_USER}:${REAL_USER}" "/tmp/name"
   chown "${REAL_USER}:${REAL_USER}" "/tmp/target"
