@@ -261,18 +261,17 @@ function check_os() {
       arch)
         printf "%b\n"  "\n${blueColour}${grisBg}${bold}The system is Arch Linux${endColour}"
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Arch Linux${endColour}"
-        
-        pacman -Rns --noconfirm codium 
-        pacman -Rns --noconfirm neovim
-                        
+
+
         # Paquetes BSPWM + POLYBAR + Escritorio => Arch Linux
         packages_bspwm_arch=(
         
         # Core BSPWM + Polybar
         git base-devel curl wget cmake dpkg net-tools rsync
         plocate gnome meson ninja bspwm sxhkd polybar
-        make zlib pcre
-        
+        make zlib pcre dbus libconfig libev libxpresent 
+        pkgconf uthash
+
         # Dependencias XCB
         libxcb xcb-proto xcb-util xcb-util-wm xcb-util-keysyms cronie
         
@@ -531,7 +530,6 @@ function bspwm_enviroment() {
       y|yes|yey)
         printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
         chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
-        chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
         chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
         chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
         chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
@@ -555,7 +553,7 @@ function bspwm_enviroment() {
         break
       ;;
       *)
-        printf "%b\n" "\n${redColour:-}${rev:-}That option is invalid. Please enter a valid option.${endColour:-}\n"
+        printf "%b\n" "\n${redColour:-}${rev:-}That option is invalid. Please enter a valid option.${endColour:-}\n" 
         continue
       ;;
     esac
