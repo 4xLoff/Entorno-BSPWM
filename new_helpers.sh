@@ -270,7 +270,7 @@ function check_os() {
         
         # Core BSPWM + Polybar
         git base-devel curl wget cmake dpkg net-tools rsync
-        plocate gnome meson ninja bspwm sxhkd polybar picom
+        plocate gnome meson ninja bspwm sxhkd polybar
         make zlib pcre
         
         # Dependencias XCB
