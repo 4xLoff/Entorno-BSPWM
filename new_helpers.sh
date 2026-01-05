@@ -120,8 +120,6 @@ trap ctrl_c SIGINT
 # Función chequea la distribucion donde se va a instalar en entorno
 
 function check_os() {
-    # Entorno a uasr
-    read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno
     
     # Creamos directorios de trabajo    
     
@@ -524,34 +522,40 @@ function bspwm_enviroment() {
   chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
   ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
   
-  case "${entorno,,}" in
-    si|y|yes|yey)
-      printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
-      chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
-      chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
-      chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
-      chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
-      chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-      sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-      printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc" 
-    ;;
-    ""|n|no|nay)
-      sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
-      chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
-      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
-      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
-      chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
-      printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-      sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
-    ;;
-    *)
-    printf "%b\n" "\n${redColour}${rev}That option is invalid.${endColour}"
-    helpPanel
-    ;;
-  esac
+  
+  while true; do
+     # Entorno a uasr
+     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno  
+  
+     case "${entorno,,}" in
+       y|yes|yey)
+         printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
+         chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
+         chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
+         chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
+         chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
+         chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+         chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+         sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+         printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
+         sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc" 
+      ;;
+      ""|n|no|nay)
+         sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
+         chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
+         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
+         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
+         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
+         printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
+         sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
+      ;;
+      *)
+         printf "%b\n" "\n${redColour}${rev}That option is invalid.${endColour}"
+         helpPanel
+      ;;
+    esac
+  done
   
   tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
   chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
