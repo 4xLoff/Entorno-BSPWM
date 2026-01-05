@@ -157,8 +157,6 @@ function check_os() {
         printf "%b\n" "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}"
         apt-get remove --purge codium -y
         apt-get remove --purge neovim -y
-        rm /usr/share/applications/nvim.desktop
-        rm /usr/share/applications/vim.desktop
         apt update -y 
 
         # Paquetes BSPWM + POLYBAR + Escritorio => Debian
@@ -183,13 +181,12 @@ function check_os() {
         libxcb-damage0-dev libxcb-glx0-dev
         libxcb-present-dev libxcb-render0-dev
         libxcb-render-util0-dev libxcb-xfixes0-dev
-        libxcb-xkb-dev libxcb-xrm-dev python-sphinx
-        libxcb-image0-dev libstartup-notification0-dev
-        libxkbcommon-dev libpango1.0-dev libglib2.0-dev
-        libjpeg-dev libcurl4-openssl-dev uthash-dev
-		  libev-dev libdbus-1-dev libconfig-dev
+        libxcb-xkb-dev libxcb-xrm-dev libxcb-image0-dev 
+        libstartup-notification0-dev libxkbcommon-dev 
+        libpango1.0-dev libglib2.0-dev libjpeg-dev 
+        libcurl4-openssl-dev uthash-dev libev-dev 
+        libdbus-1-dev libconfig-dev
 
-        
         # Características opcionales Polybar
         libasound2-dev libpulse-dev libjsoncpp-dev
         libmpdclient-dev libnl-genl-3-dev
@@ -521,48 +518,53 @@ function bspwm_enviroment() {
   chmod +x "${USER_HOME}/.config/picom/picom.conf"
   chmod +x "${USER_HOME}/.config/kitty/kitty.conf"
   ln -s -f "${USER_HOME}/.p10k.zsh" "/root/.p10k.zsh"
+  if [[ -f /etc/arch-release ]]; then
+     sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc"
+     chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
+  fi
   
   
   while true; do
-     # Entorno a uasr
-     read -rp "$(printf "%b\n" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno  
-  
-     case "${entorno,,}" in
-       y|yes|yey)
-         printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
-         chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
-         chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
-         chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
-         chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
-         chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-         chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-         sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-         printf "%b\n"  "${greenColour}${rev}All packages installed successfully.${endColour}"
-         sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-arch" "${USER_HOME}/.zshrc" 
+    read -rp "$(printf "%b" "${orangeColour}¿Instalar entorno BSPWM de s4vitar? ${endColour}${greenColour}${grisBg}${bold}(si|y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
+
+    case "${entorno,,}" in
+      y|yes|yey)
+        printf "%b\n" "${greenColour}${rev}Install themes s4vitar.${endColour}"
+        chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
+        chmod +x "${USER_HOME}/.config/polybar/scripts/powermenu.sh"
+        chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
+        chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
+        chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+        chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
+        sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+        sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
+        chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
+        printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
+        break
       ;;
       ""|n|no|nay)
-         sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
-         chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
-         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
-         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
-         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
-         printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
-         sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
+        sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
+        chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
+        sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.zshrc-debian" "${USER_HOME}/.zshrc"
+        chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
+        printf "%b\n" "${greenColour}${rev}All packages installed successfully.${endColour}"
+        break
       ;;
       *)
-         printf "%b\n" "\n${redColour}${rev}That option is invalid.${endColour}"
-         helpPanel
+        printf "%b\n" "\n${redColour:-}${rev:-}That option is invalid. Please enter a valid option.${endColour:-}\n" || true
       ;;
     esac
   done
-  
+
   tar -xvzf /usr/share/seclists/Passwords/Leaked-Databases/rockyou.txt.tar.gz
   chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
   sudo -u "${REAL_USER}" touch /tmp/name /tmp/target
   chown "${REAL_USER}:${REAL_USER}" "/tmp/name"
   chown "${REAL_USER}:${REAL_USER}" "/tmp/target"
-  chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
   ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
   usermod --shell /usr/bin/zsh "$REAL_USER"
   usermod --shell /usr/bin/zsh root
