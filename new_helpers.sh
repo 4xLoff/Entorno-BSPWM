@@ -188,33 +188,29 @@ function check_os() {
         # Array de paquetes necesarios para BSPWM en Debian
         packages_bspwm_debian=(
         curl wget dpkg gnupg gdb cmake net-tools 
-        p7zip-full meson ninja-build bspwm
-        sxhkd polybar libpcre3-dev 
+        p7zip-full meson ninja-build bspwm sxhkd 
+        polybar libpcre3-dev libxcb-present-dev
         build-essential libxcb-util0-dev libxcb-ewmh-dev 
         libxcb-randr0-dev libxcb-icccm4-dev libxcb-keysyms1-dev 
         libxcb-xinerama0-dev libxcb-xtest0-dev libxcb-shape0-dev 
-        xcb-proto zsh zsh-syntax-highlighting
-        make cmake-data pkg-config
-        python3-sphinx python3-xcbgen
-        libuv1-dev libcairo2-dev libxcb1-dev
-        libxcb-composite0-dev libxcb-cursor0-dev
-        libxcb-damage0-dev libxcb-glx0-dev
-        libxcb-present0-dev libxcb-render0-dev
-        libxcb-render-util0-dev libxcb-xfixes0-dev
-        libxcb-xkb-dev libxcb-xrm-dev libxcb-image0-dev 
-        libstartup-notification0-dev libxkbcommon-dev 
-        libpango1.0-dev libglib2.0-dev libjpeg-dev 
-        libcurl4-openssl-dev uthash-dev libev-dev 
-        libdbus-1-dev libconfig-dev
-        libasound2-dev libpulse-dev libjsoncpp-dev
-        libmpdclient-dev libnl-genl-3-dev
-        libx11-xcb-dev libxext-dev libxi-dev
+        xcb-proto zsh zsh-syntax-highlighting make 
+        cmake-data pkg-config python-sphinx python3-sphinx 
+        python3-xcbgen libxcb-sync-dev libuv1-dev 
+        libcairo2-dev libxcb1-dev libxcb-composite0-dev 
+        libxcb-cursor-dev libxcb-damage0-dev libxcb-glx0-dev
+        libxcb-render0-dev libxcb-render-util0-dev 
+        libxcb-xfixes0-dev libxcb-xkb-dev libxcb-xrm-dev 
+        libxcb-image0-dev libstartup-notification0-dev 
+        libxkbcommon-dev libpango1.0-dev libglib2.0-dev 
+        libjpeg-dev libcurl4-openssl-dev uthash-dev 
+        libev-dev libdbus-1-dev libconfig-dev libasound2-dev 
+        libpulse-dev libjsoncpp-dev libmpdclient-dev 
+        libnl-genl-3-dev libx11-xcb-dev libxext-dev libxi-dev
         libxinerama-dev libxkbcommon-x11-dev libxrandr-dev
-        libgl1-mesa-dev libpixman-1-dev
-        kitty rofi suckless-tools feh scrot flameshot
-        dunst caja ranger lxappearance
-        xdo xdotool wmctrl xclip fontconfig
-        bd bc seclists locate)
+        libgl1-mesa-dev libpixman-1-dev kitty rofi 
+        suckless-tools feh scrot flameshot dunst caja 
+        ranger lxappearance xdo xdotool wmctrl xclip 
+        fontconfig bd bc seclists locate)
 
         # Instala cada paquete y muestra si tuvo éxito o falló
         for package in "${packages_bspwm_debian[@]}"; do
@@ -384,13 +380,12 @@ function bspwm_enviroment() {
   cd "${INSTALL_DIR}" || exit 1
   exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
   cd "${INSTALL_DIR}/blue-sky/polybar/"
-  sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/*"
 
   # Copia fuentes de polybar al sistema
   cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
   mkdir -p /usr/share/fonts/truetype
   cp * /usr/share/fonts/truetype/
-  pushd /usr/share/fonts/truetype &>/dev/null 
+  pushd /usr/share/fonts/truetype/ >/dev/null 2>&1   # `&>` es **atajo específico de bash** (y zsh); no es POSIX.
   exec_cmd fc-cache -v
   popd &>/dev/null 
   
@@ -401,7 +396,7 @@ function bspwm_enviroment() {
   mkdir -p /usr/local/share/fonts/
   exec_cmd unzip Hack.zip && sudo mv *.ttf /usr/local/share/fonts/
   rm -f Hack.zip LICENSE.md README.md 2>/dev/null 
-  pushd /usr/local/share/fonts/
+  pushd /usr/local/share/fonts/ >/dev/null 2>&1
   exec_cmd fc-cache -v
   popd &>/dev/null
   
@@ -630,10 +625,10 @@ function spotify_env(){
 
     # Instalar playerctl en Debian
     exec_cmd apt-get install playerctl -y
-    exec_cmd curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+    curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg &>/dev/null
 
     # Agregar repositorio de Spotify
-    echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+    echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list &>/dev/null
     exec_cmd apt-get update
     exec_cmd apt-get install spotify-client -y
   fi
@@ -688,7 +683,8 @@ function clean_bspwm() {
     exec_cmd apt-get install --reinstall "${APT_FLAGS[@]}" parrot-apps-basics 
 
     # Marcar paquetes como manuales
-    apt-mark manual parrot-apps-basics neovim vim btop figlet 
+    apt-mark manual parrot-apps-basics neovim bspwm sxhdx picom kitty polybar &>/dev/null # sirve para que `autoremove` no los borre.
+    apt-mark unhold bspwm sxhkd picom polybar &>/dev/null   # evitar que se actualicen/cambien de versión.
 
     # Actualizar sistema completamente
     exec_cmd apt -y --fix-broken --fix-missing full-upgrade
