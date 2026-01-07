@@ -19,7 +19,7 @@ cleartarget
 #ProveVideoWallpaper
 #/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
 /usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
-~/.config/polybar/launch4.sh
+~/.config/polybar/launch4.sh 
 /usr/local/bin/picom --config ~/.config/picom/picom.conf
 /usr/bin/bspc config focus_follows_pointer true
 /usr/local/bin/picom --experimental-backends &
@@ -28,3 +28,12 @@ cleartarget
 /usr/bin/bspc config border_width 0
 /usr/bin/xsetroot -cursor_name left_ptr &
 
+#Usage : launch.sh --theme
+
+#Available Themes :
+#--blocks    --colorblocks    --cuts      --docky
+#--forest    --grayblocks     --hack      --material
+#--panels    --pwidgets       --shades    --shapes
+#
+#Theme s4vitar
+#launch4.sh
