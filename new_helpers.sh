@@ -59,9 +59,14 @@ MUTE_MODE=false
 OUTPUT_REDIRECT="/dev/stdout"
 
 # Configuración de needrestart para evitar prompts durante instalación
-[[ -f /etc/needrestart/needrestart.conf ]] && sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf &>/dev/null
-[[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf &>/dev/null
-[[ -f /etc/needrestart/needrestart.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
+if [[ -f /etc/needrestart/needrestart.conf ]]; then
+  sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf &>/dev/null
+  sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf &>/dev/null
+fi
+
+[[ -f /etc/needrestart/notify.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
+
+
 
 # Flags para apt-get que fuerzan respuestas automáticas y evitan prompts
 APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confnew")
@@ -549,7 +554,6 @@ function bspwm_enviroment() {
         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
         chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
 
         # Mensaje final
         print_msg "${greenColour}${rev}All packages installed successfully.${endColour}"
@@ -566,6 +570,7 @@ function bspwm_enviroment() {
 
   # Permisos de ejecución para launcher
   chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
+  chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
 
   # Crear archivos temporales usados por polybar
   sudo -u "${REAL_USER}" touch /tmp/name /tmp/target
