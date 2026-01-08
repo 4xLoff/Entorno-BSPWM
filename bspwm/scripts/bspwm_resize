@@ -1,16 +1,43 @@
 #!/usr/bin/env dash
 
-if bspc query -N -n focused.floating > /dev/null; then
-	step=20
+# Script para redimensionar ventanas en bspwm
+# Usa diferentes pasos según si la ventana está flotando (20px) o en mosaico (100px)
+
+# Verifica si la ventana actualmente enfocada está en estado flotante
+if /usr/bin/bspc query -N -n focused.floating > /dev/null; then
+    step=20  # Paso pequeño para ajustes finos en ventanas flotantes
 else
-	step=100
+    step=100 # Paso grande para ventanas en modo mosaico (tiled)
 fi
 
+# Asigna parámetros según la dirección de redimensionamiento
 case "$1" in
-	west) dir=right; falldir=left; x="-$step"; y=0;;
-	east) dir=right; falldir=left; x="$step"; y=0;;
-	north) dir=top; falldir=bottom; x=0; y="-$step";;
-	south) dir=top; falldir=bottom; x=0; y="$step";;
+    west)   # Redimensionar borde izquierdo
+        dir=right    # Intenta primero mover el borde derecho
+        falldir=left # Fallback: mover el borde izquierdo si el derecho falla
+        x="-$step"   # Reduce el ancho (mueve hacia la izquierda)
+        y=0
+        ;;
+    east)   # Redimensionar borde derecho
+        dir=right    # Intenta primero mover el borde derecho
+        falldir=left # Fallback: mover el borde izquierdo
+        x="$step"    # Aumenta el ancho (mueve hacia la derecha)
+        y=0
+        ;;
+    north)  # Redimensionar borde superior
+        dir=top      # Intenta primero mover el borde superior
+        falldir=bottom # Fallback: mover el borde inferior
+        x=0
+        y="-$step"   # Reduce la altura (mueve hacia arriba)
+        ;;
+    south)  # Redimensionar borde inferior
+        dir=top      # Intenta primero mover el borde superior
+        falldir=bottom # Fallback: mover el borde inferior
+        x=0
+        y="$step"    # Aumenta la altura (mueve hacia abajo)
+        ;;
 esac
 
-bspc node -z "$dir" "$x" "$y" || bspc node -z "$falldir" "$x" "$y"
+# Ejecuta el redimensionamiento
+# Primero intenta con la dirección principal, si falla usa la dirección alternativa
+/usr/bin/bspc node -z "$dir" "$x" "$y" || /usr/bin/bspc node -z "$falldir" "$x" "$y"
