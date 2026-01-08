@@ -146,6 +146,8 @@ function check_os() {
   
     # Crea el directorio de instalación como el usuario real
     sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
+    sudo -u "${REAL_USER}" touch /tmp/name 
+    sudo -u "${REAL_USER}" touch /tmp/target
     
     # Busca directorios existentes llamados "Entorno-BSPWM" fuera del INSTALL_DIR
     ENTORNOS=()
@@ -163,7 +165,6 @@ function check_os() {
     if (( ${#ENTORNOS[@]} > 0 )); then
         for dir in "${ENTORNOS[@]}"; do
            sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
-           print_msg "[+] Movido: $dir → ${INSTALL_DIR}/"
            print_msg "\n${magentaColour}${rev}The directory was moved successfully${endColour}"
         done
     fi
@@ -182,8 +183,8 @@ function check_os() {
     case "${ID,,}" in
       # Instalación para sistemas basados en Debian
       kali|parrot|ubuntu|debian)
-        print_msg "\n${greenColour}${grisBg}${bold}The system is Debian${endColour}"
-        print_msg "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}"
+        print_msg "\n${greenColour}${grisBg}${bold}The system is Debian${endColour}\n"
+        print_msg "\n${greenColour}${rev}Installing only the bspwm environment for Debian${endColour}\n"
         
         # Remueve versiones conflictivas de codium y neovim
         exec_cmd apt-get remove --purge codium -y
@@ -220,9 +221,9 @@ function check_os() {
         # Instala cada paquete y muestra si tuvo éxito o falló
         for package in "${packages_bspwm_debian[@]}"; do
           if exec_cmd apt-get install "${APT_FLAGS[@]}" "${package}"; then
-              print_msg "${greenColour}${rev}Package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed${endColour}"
+              print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
           else
-              print_msg "${yellowColour}${rev}Package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed${endColour}"
+              print_msg "${yellowColour}${rev}[!] Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
           fi
         done  
 
@@ -260,8 +261,8 @@ function check_os() {
         
       # Instalación para Arch Linux
       arch)
-        print_msg "\n${blueColour}${grisBg}${bold}The system is Arch Linux${endColour}"
-        print_msg "\n${greenColour}${rev}Installing only the bspwm environment for Arch Linux${endColour}"
+        print_msg "\n${blueColour}${grisBg}${bold}The system is Arch Linux${endColour}\n"
+        print_msg "\n${greenColour}${rev}Installing only the bspwm environment for Arch Linux${endColour}\n"
 
         # Array de paquetes necesarios para BSPWM en Arch
         packages_bspwm_arch=(
@@ -284,9 +285,9 @@ function check_os() {
         # Instala paquetes con pacman
         for package in "${packages_bspwm_arch[@]}"; do
           if exec_cmd pacman -S "${package}" --noconfirm --needed ; then
-              print_msg "${greenColour}${rev}Package ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed${endColour}"
+              print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
           else
-              print_msg "${yellowColour}${rev}Package ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed${endColour}"
+              print_msg "${yellowColour}${rev}[!] Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
           fi
         done     
         
@@ -384,7 +385,6 @@ function bspwm_enviroment() {
   print_msg "${greenColour}${rev}Configure polybar fonts.${endColour}"
   cd "${INSTALL_DIR}" || exit 1
   exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
-  cd "${INSTALL_DIR}/blue-sky/polybar/"
 
   # Copia fuentes de polybar al sistema
   cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
@@ -484,17 +484,14 @@ function bspwm_enviroment() {
 
   # Copia configuraciones del tema polybar
   print_msg "${greenColour}${rev}Move files configuration.${endColour}"
-  sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/polybar-themes/simple/." "${USER_HOME}/.config/polybar/"
-  sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/forest"
   sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
-  sudo -u "${REAL_USER}" rm -r "${USER_HOME}/.config/polybar/launch.sh"
   
   # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/kitty/" "${USER_HOME}/.config/"
-  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/rofi/" "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/." "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/." "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/." "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/kitty/." "${USER_HOME}/.config/"
+  sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/rofi/." "${USER_HOME}/.config/"
   sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
   
   # Da permisos de ejecución a archivos de configuración
@@ -525,17 +522,8 @@ function bspwm_enviroment() {
 
       # Opción sí
       y|yes|yey)
-
         # Mensaje de instalación
         print_msg "${greenColour}${rev}Install themes s4vitar.${endColour}"
-
-        # Dar permisos de ejecución a scripts de polybar
-        chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
-        chmod +x "${USER_HOME}/.config/polybar/scripts/ethernet_status.sh"
-        chmod +x "${USER_HOME}/.config/polybar/scripts/htb_status.sh"
-        chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-        chmod +x "${USER_HOME}/.config/polybar/scripts/htb_target.sh"
-
         # Cambiar script de lanzamiento de polybar en bspwm
         sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
         # Mensaje final
@@ -548,12 +536,6 @@ function bspwm_enviroment() {
 
         # Copiar configuración de polybar forest
         sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
-
-        # Dar permisos de ejecución a scripts forest
-        chmod +x "${USER_HOME}/.config/polybar/forest/launch.sh"
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/target.sh"
 
         # Mensaje final
         print_msg "${greenColour}${rev}All packages installed successfully.${endColour}"
@@ -569,11 +551,18 @@ function bspwm_enviroment() {
   done
 
   # Permisos de ejecución para launcher
+  chmod +x "${USER_HOME}/.config/polybar/launch.sh"
+  chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
+  chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
   chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
   chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
+  
+  # Permisos para ethernet_status, vpn_status, target_to_hack
+  chmod +x "${USER_HOME}/.config/polybar/emili/scripts/ethernet_status"
+  chmod +x "${USER_HOME}/.config/polybar/emili/scripts/vpn_status"
+  chmod +x "${USER_HOME}/.config/polybar/emili/scripts/target_to_hack"
 
   # Crear archivos temporales usados por polybar
-  sudo -u "${REAL_USER}" touch /tmp/name /tmp/target
   chown "${REAL_USER}:${REAL_USER}" "/tmp/name"
   chown "${REAL_USER}:${REAL_USER}" "/tmp/target"
 
@@ -592,11 +581,8 @@ function bspwm_enviroment() {
   chown "${REAL_USER}:${REAL_USER}" "/root/.cache" -R
   chown "${REAL_USER}:${REAL_USER}" "/root/.local" -R
 
-  # Actualizar base de datos de locate
-  exec_cmd updatedb
-
   # Instalación de Visual Studio Code
-  print_msg "${greenColour}${rev}Install VSC.${endColour}"
+  print_msg "${greenColour}${rev}Install Visual Studio Code. ${endColour}"
   exec_cmd curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
   exec_cmd dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
 }
@@ -628,6 +614,10 @@ function spotify_env(){
     exec_cmd systemctl is-enabled --quiet mpd.service
   else
 
+    # Dar permisos de ejecución a scripts forest
+    chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+    chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
+
     # Instalar playerctl en Debian
     exec_cmd apt-get install playerctl -y
     curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg &>/dev/null
@@ -643,7 +633,7 @@ function spotify_env(){
 function clean_bspwm() {
 
   # Mensaje de limpieza
-  print_msg "${greenColour}${rev}Limpiando todo.${endColour}"
+  print_msg "${greenColour}${rev}Limpiando todo, ten paciencia.${endColour}"
 
   # Corregir permisos de función de bspc para sudo su
   sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
@@ -702,15 +692,15 @@ function clean_bspwm() {
     exec_cmd apt-get clean
     exec_cmd apt autoclean
   fi
+  
+  # Actualizar base de datos de locate
+  exec_cmd updatedb
 }
 
 # Función para cerrar sesión y reiniciar el sistema
 function shutdown_session(){
   # Mensaje de aviso
   print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
-
-  # Crear tarea cron para limpiar archivos temporales al reiniciar
-  sudo -u "${REAL_USER}" echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | crontab -
 
   # Esperar antes de reiniciar
   sleep 10
