@@ -1,147 +1,206 @@
-#
-# wm independent hotkeys
-#
+# ============================================
+# SXHKD - Simple X Hotkey Daemon
+# Configuración de atajos de teclado para BSPWM
+# ============================================
 
-# terminal emulator
+# ============================================
+# WM INDEPENDENT HOTKEYS
+# Atajos independientes del gestor de ventanas
+# ============================================
+
+# --- Terminal Emulator ---
+# Abrir terminal Kitty
 super + Return
 	/usr/bin/kitty
 
-# program launcher
+# --- Program Launcher ---
+# Lanzador de aplicaciones con Rofi
 super + d
 	rofi -no-config -no-lazy-grab -show drun -modi drun -icon-theme "ePapirus" -show-icons -theme ~/.config/polybar/forest/scripts/rofi/launcher.rasi
 
-# make sxhkd reload its configuration files:
+# --- Reload Configuration ---
+# Recargar configuración de sxhkd sin reiniciar
 super + Escape
 	pkill -USR1 -x sxhkd
 
-#
-# bspwm hotkeys
-#
+# ============================================
+# BSPWM HOTKEYS
+# Atajos específicos del gestor de ventanas
+# ============================================
 
-# quit/restart bspwm
+# --- Quit/Restart BSPWM ---
+# super + alt + q  ->  Salir de BSPWM
+# super + alt + r  ->  Reiniciar BSPWM
 super + alt + {q,r}
 	bspc {quit,wm -r}
 
-# close and kill
+# --- Close/Kill Window ---
+# super + q        ->  Cerrar ventana (graceful)
+# super + shift + q ->  Matar ventana (force kill)
 super + {_,shift + }q
 	bspc node -{c,k}
 
-# alternate between the tiled and monocle layout
+# --- Toggle Monocle Layout ---
+# Alternar entre layout tiled y monocle (pantalla completa sin bordes)
 super + m
 	bspc desktop -l next
 
-# send the newest marked node to the newest preselected node
+# --- Marked Nodes ---
+# Enviar nodo marcado al nodo preseleccionado más reciente
 super + y
 	bspc node newest.marked.local -n newest.!automatic.local
 
-# swap the current node and the biggest window
+# --- Swap with Biggest Window ---
+# Intercambiar ventana actual con la más grande del escritorio
 super + g
 	bspc node -s biggest.window
 
-#
-# state/flags
-#
+# ============================================
+# STATE/FLAGS
+# Estados y banderas de ventanas
+# ============================================
 
-# set the window state
+# --- Window State ---
+# super + t        ->  Tiled (modo mosaico)
+# super + shift + t ->  Pseudo-tiled (flotante con tamaño respetado)
+# super + s        ->  Floating (flotante)
+# super + f        ->  Fullscreen (pantalla completa)
 super + {t,shift + t,s,f}
 	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
 
-# set the node flags
+# --- Node Flags ---
+# super + ctrl + m  ->  Marked (marcada)
+# super + ctrl + x  ->  Locked (bloqueada)
+# super + ctrl + y  ->  Sticky (pegajosa, visible en todos los escritorios)
+# super + ctrl + z  ->  Private (privada, no se graba en historial)
 super + ctrl + {m,x,y,z}
 	bspc node -g {marked,locked,sticky,private}
 
-#
-# focus/swap
-#
+# ============================================
+# FOCUS/SWAP
+# Navegación y movimiento de ventanas
+# ============================================
 
-# focus the node in the given direction
+# --- Focus/Swap Direction ---
+# super + flechas       ->  Enfocar ventana en dirección
+# super + shift + flechas ->  Mover ventana en dirección
 super + {_,shift + }{Left,Down,Up,Right}
 	bspc node -{f,s} {west,south,north,east}
 
-# focus the node for the given path jump
+# --- Focus Path Jump ---
+# super + p      ->  Enfocar nodo padre
+# super + b      ->  Enfocar nodo hermano
+# super + comma  ->  Enfocar primer hijo
+# super + period ->  Enfocar segundo hijo
 super + {p,b,comma,period}
 	bspc node -f @{parent,brother,first,second}
 
-# focus the next/previous window in the current desktop
+# --- Focus Next/Previous Window ---
+# Navegar entre ventanas del escritorio actual
+# super + c        ->  Siguiente ventana
+# super + shift + c ->  Ventana anterior
 super + {_,shift + }c
 	bspc node -f {next,prev}.local.!hidden.window
 
-# focus the next/previous desktop in the current monitor
+# --- Focus Next/Previous Desktop ---
+# Navegar entre escritorios del monitor actual
 super + bracket{left,right}
 	bspc desktop -f {prev,next}.local
 
-# focus the last node/desktop
+# --- Focus Last ---
+# super + grave (`)  ->  Última ventana enfocada
+# super + Tab        ->  Último escritorio enfocado
 super + {grave,Tab}
 	bspc {node,desktop} -f last
 
-# focus the older or newer node in the focus history
+# --- Focus History ---
+# Navegar por el historial de foco
+# super + o  ->  Ventana más antigua
+# super + i  ->  Ventana más reciente
 super + {o,i}
 	bspc wm -h off; \
 	bspc node {older,newer} -f; \
 	bspc wm -h on
 
-# focus or send to the given desktop
+# --- Focus/Send to Desktop ---
+# super + [1-9,0]        ->  Ir al escritorio N
+# super + shift + [1-9,0] ->  Enviar ventana al escritorio N
 super + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}'
 
-#
-# preselect
-#
+# ============================================
+# PRESELECT
+# Preselección de ubicación para nuevas ventanas
+# ============================================
 
-# preselect the direction
+# --- Preselect Direction ---
+# Preseleccionar dirección donde aparecerá la próxima ventana
 super + ctrl + alt + {Left,Down,Up,Right}
 	bspc node -p {west,south,north,east}
 
-# preselect the ratio
+# --- Preselect Ratio ---
+# Establecer ratio de división (0.1 a 0.9)
 super + ctrl + {1-9}
 	bspc node -o 0.{1-9}
 
-# cancel the preselection for the focused node
+# --- Cancel Preselection ---
+# Cancelar preselección del nodo enfocado
 super + ctrl + alt + space
 	bspc node -p cancel
 
-# cancel the preselection for the focused desktop
+# Cancelar preselección de todo el escritorio
 super + ctrl + shift + space
 	bspc query -N -d | xargs -I id -n 1 bspc node id -p cancel
 
-#
-# move/resize
-#
+# ============================================
+# MOVE/RESIZE
+# Mover y redimensionar ventanas
+# ============================================
 
-# expand a window by moving one of its side outward
-
-super + alt +  {Left,Down,Up,Right}
+# --- Expand Window ---
+# Expandir ventana moviendo un borde hacia afuera (20px)
+super + alt + {Left,Down,Up,Right}
 	bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
 
-# contract a window by moving one of its side inward
-super + alt + shift +  {Left,Down,Up,Right}
-  bspc node -z {right -20 0,top 0 20,bottom 0 -20,left 20 0}
+# --- Contract Window ---
+# Contraer ventana moviendo un borde hacia adentro (20px)
+super + alt + shift + {Left,Down,Up,Right}
+	bspc node -z {right -20 0,top 0 20,bottom 0 -20,left 20 0}
 
-# move a floating window
+# --- Move Floating Window ---
+# Mover ventana flotante con las flechas (20px por paso)
 super + ctrl + {Left,Down,Up,Right}
 	bspc node -v {-20 0,0 20,0 -20,20 0}
 
-# Custom move resize
+# --- Custom Move/Resize ---
+# Script personalizado de redimensionamiento inteligente
 super + {Left,Down,Up,Right}
 	~/.config/bspwm/scripts/bspwm_resize {west,south,north,east}
 
-# Open firefoxsuper + shift + f
+# ============================================
+# APPLICATION SHORTCUTS
+# Lanzadores rápidos de aplicaciones
+# ============================================
+
+# --- Browsers ---
+# Firefox
 super + shift + f
-    /usr/bin/firefox
+	/usr/bin/firefox
 
-# Open Chrome
+# Google Chrome
 super + shift + g
-    /opt/google/chrome/chrome & disown
+	/opt/google/chrome/chrome & disown
 
-# BurpSuite
+# --- Security Tools ---
+# Burp Suite Professional
 super + x
-    /bin/burp & disown 
+	/bin/burp & disown
 
-# BurpSuite-Community
+# Burp Suite Community Edition
 super + b
 	/usr/local/bin/BurpSuiteCommunity & disown
 
-# Bloquear pantalla
+# --- Screen Lock ---
+# Bloquear pantalla con i3lock-fancy
 super + q
-    i3lock-fancy
-
+	i3lock-fancy
