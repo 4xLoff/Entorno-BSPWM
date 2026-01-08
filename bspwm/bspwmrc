@@ -1,39 +1,73 @@
 #!/bin/sh
 
-pgrep -x sxhkd > /dev/null || sxhkd &
+# ============================================
+# BSPWM Configuration File
+# ============================================
 
-bspc monitor -d I II III IV V VI VII VIII IX X
+# --- Hotkey Daemon ---
+# Iniciar sxhkd si no está corriendo
+/usr/bin/pgrep -x sxhkd > /dev/null || sxhkd &
 
-bspc config border_width         2
-bspc config window_gap          12
-bspc config split_ratio          0.52
-bspc config borderless_monocle   true
-bspc config gapless_monocle      true
-bspc rule -a Caja state=floating follow=on
-bspc rule -a Gimp desktop='^8' state=floating follow=on
-bspc rule -a Chromium desktop='^2'
-bspc rule -a mplayer2 state=floating
-bspc rule -a Kupfer.py focus=on
-bspc rule -a Screenkey manage=off
-cleartarget
-#ProveVideoWallpaper
+# --- Workspaces ---
+# Configurar 10 escritorios virtuales
+/usr/bin/bspc monitor -d I II III IV V VI VII VIII IX X
+
+# --- Window Appearance ---
+/usr/bin/bspc config border_width          0      # Ancho del borde de ventanas
+/usr/bin/bspc config window_gap            12     # Espacio entre ventanas
+/usr/bin/bspc config split_ratio           0.52   # Ratio de división de ventanas
+/usr/bin/bspc config borderless_monocle    true   # Sin bordes en modo monocle
+/usr/bin/bspc config gapless_monocle       true   # Sin gaps en modo monocle
+/usr/bin/bspc config focus_follows_pointer true   # El foco sigue al puntero del mouse
+
+# --- Window Rules ---
+# Reglas específicas por aplicación
+/usr/bin/bspc rule -a Caja state=floating follow=on                  # Gestor de archivos flotante
+/usr/bin/bspc rule -a Gimp desktop='^8' state=floating follow=on     # Gimp en escritorio 8
+/usr/bin/bspc rule -a Chromium desktop='^2'                          # Chromium en escritorio 2
+/usr/bin/bspc rule -a mplayer2 state=floating                        # Mplayer flotante
+/usr/bin/bspc rule -a Kupfer.py focus=on                             # Auto-focus para Kupfer
+/usr/bin/bspc rule -a Screenkey manage=off                           # No administrar Screenkey
+
+# --- Custom Scripts ---
+# Limpiar target de HTB/pentesting
+/usr/local/bin/cleartarget
+
+# --- Wallpaper ---
+# Opción 1: Video wallpaper (desactivado)
 #/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
+
+# Opción 2: Wallpaper estático (activo)
 /usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
-~/.config/polybar/launch4.sh 
+
+# --- Polybar ---
+# Lanzar la barra de estado
+~/.config/polybar/launch.sh --forest
+
+# --- Compositor (Picom) ---
+# Compositor para transparencias y efectos visuales
 /usr/local/bin/picom --config ~/.config/picom/picom.conf
-/usr/bin/bspc config focus_follows_pointer true
 /usr/local/bin/picom --experimental-backends &
-#FixBurpsuite
-/usr/bin/wmname LG3D &    
-/usr/bin/bspc config border_width 0
+
+# --- Cursor ---
+# Establecer cursor por defecto
 /usr/bin/xsetroot -cursor_name left_ptr &
 
-#Usage : launch.sh --theme
+# --- Java Applications Fix ---
+# Fix para aplicaciones Java (como Burp Suite)
+/usr/bin/wmname LG3D &
 
-#Available Themes :
-#--blocks    --colorblocks    --cuts      --docky
-#--forest    --grayblocks     --hack      --material
-#--panels    --pwidgets       --shades    --shapes
+# ============================================
+# POLYBAR THEMES DISPONIBLES
+# ============================================
+# Uso: launch.sh --theme
 #
-#Theme s4vitar
-#launch4.sh
+# Temas disponibles:
+#   --blocks        --colorblocks    --cuts       --docky
+#   --forest        --grayblocks     --hack       --material
+#   --panels        --pwidgets       --shades     --shapes
+#
+# Configuración actual:
+#   launch1.sh  -> Tema emili
+#   launch4.sh  -> Tema s4vitar (desactivado)
+# ============================================
