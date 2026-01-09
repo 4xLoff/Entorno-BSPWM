@@ -85,21 +85,46 @@ print_msg() {
     printf "%b\n" "$@"
 }
 
+spinner() { 
+    local delay=0.1 
+    local spinstr='|/-\'
+    while true; do 
+        local temp=${spinstr#?} 
+        printf "\r${greenColour}[%c]${endColour} " "$spinstr" 
+        local spinstr=$temp${spinstr%"$temp"} 
+        sleep $delay 
+    done 
+} 
+
+start_spinner() { 
+    tput civis 
+    spinner & 
+    spinner_pid=$! 
+} 
+
+stop_spinner() { 
+    if [[ -n "$spinner_pid" ]]; then 
+        kill $spinner_pid 2>/dev/null 
+        wait $spinner_pid 2>/dev/null 
+        printf "\r${greenColour}[✓]${endColour} Done!\n" 
+        tput cnorm 
+        unset spinner_pid 
+    fi 
+}
+
 # Muestra el panel de ayuda con las opciones disponibles
 helpPanel() {
-    print_msg "\n${greenColour}${rev}[!] Uso: sudo bash $0 -d {Mode} [-c] [-r] [-l] [-s] [-m]${endColour}\n"
+    print_msg "\n${greenColour}${rev}[!] Uso: sudo bash $0 -d {Mode} [-l] [-s] [-m]${endColour}\n"
     print_msg "\t${blueColour}${rev}[-d] Mode of installation.${endColour}"
     print_msg "\t\t${magentaColour}${grisBg}${bold}debian${endColour}\t\t\t${yellowColour}${rev}Distribution Debian nesesary =< 60 gb.${endColour}"
     print_msg "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary =< 60 gb.${endColour}"
     print_msg "\t${blueColour}${rev}Opcionales:${endColour}"
-    print_msg "\t\t${magentaColour}${rev}[-c]${endColour}\t\t\t${greenColour}${rev}Core package Hacking (Only for more than 120 gb)${endColour}"
-    print_msg "\t\t${cianColour}${rev}[-r]${endColour}\t\t\t${greenColour}${rev}Repositories GitHub (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${magentaColour}${rev}[-l]${endColour}\t\t\t${greenColour}${rev}LaTeX environment (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${cianColour}${rev}[-s]${endColour}\t\t\t${greenColour}${rev}Spotify (Only for more than 16 gb RAM)${endColour}"
     print_msg "\t\t${magentaColour}${rev}[-m]${endColour}\t\t\t${greenColour}${rev}Mode silence (mute)${endColour}"
     print_msg "\t${redColour}${rev}[-h] Show this help panel.${endColour}"
     print_msg "\n${greenColour}${rev}Example:${endColour}"
-    print_msg "\t${greenColour}${bold}sudo bash $0 -d debian -c -r -l -s -m${endColour}"
+    print_msg "\t${greenColour}${bold}sudo bash $0 -d debian -l -s -m${endColour}"
     tput cnorm; exit 1
 }
 
@@ -234,7 +259,8 @@ function check_os() {
         exec_cmd make
         exec_cmd make install 
 
-        print_msg "${greenColour}${rev}[*] Polybar compilation.${endColour}"
+        print_msg "${greenColour}${rev}[*] Polybar compilation please have patience.${endColour}"
+        start_spinner
         cd "${INSTALL_DIR}" || exit 1
 
         # Clona polybar con submódulos recursivos
@@ -247,6 +273,7 @@ function check_os() {
         exec_cmd cmake ..
         exec_cmd make -j$(nproc)
         exec_cmd make install
+        stop_spinner
 
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
@@ -296,7 +323,8 @@ function check_os() {
         exec_cmd make install 
         
         # Crea un archivo swap temporal de 2GB para la compilación de polybar
-        print_msg "${greenColour}${rev}[*] Creating swap and compiling Polybar for Arch Linux.${endColour}"
+        print_msg "${greenColour}${rev}[*] Creating swap and compiling Polybar for Arch Linux please have patience.${endColour}"
+        start_spinner
         sleep 5
         exec_cmd fallocate -l 2G /swapfile           # Crea un archivo de 2GB para usar como memoria virtual
         exec_cmd chmod 600 /swapfile                 # Le da permisos solo al root
@@ -318,6 +346,7 @@ function check_os() {
         exec_cmd make -j$(nproc)
         sleep 5
         exec_cmd make install
+        stop_spinner
         
         # Desactiva y elimina el archivo swap
         exec_cmd swapoff /swapfile
@@ -362,7 +391,8 @@ function bspwm_enviroment() {
     popd &>/dev/null
 
     # Clona y compila picom (compositor)
-    print_msg "${greenColour}${rev}[*] Picom compilation.${endColour}"
+    print_msg "${greenColour}${rev}[*] Picom compilation please have patience.${endColour}"
+    start_spinner
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
     cd picom/
@@ -371,6 +401,7 @@ function bspwm_enviroment() {
     exec_cmd meson --buildtype=release . build
     exec_cmd ninja -C build
     exec_cmd ninja -C build install 
+    stop_spinner
 
     # Instala powerlevel10k para el usuario y para root
     print_msg "${greenColour}${rev}[*] Download powerlevel10k.${endColour}"
@@ -562,7 +593,8 @@ function latex_env(){
     exec_cmd wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v1.10.3/obsidian_1.10.3_amd64.deb
     exec_cmd dpkg -i obsidian_1.10.3_amd64.deb
     print_msg "${greenColour}${rev}[*] The latex environment will be installed, this will take more than 30 minutes approximately.${endColour}"
-
+    start_spinner
+    
     if hash pacman 2>/dev/null; then
         exec_cmd pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
     elif hash apt 2>/dev/null; then
@@ -571,6 +603,8 @@ function latex_env(){
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
+    
+    stop_spinner
 }
 
 # Función para configurar el entorno de Spotify
@@ -622,8 +656,8 @@ function spotify_env(){
 function clean_bspwm() {
 
     # Mensaje de limpieza
-    print_msg "${greenColour}${rev}Limpiando todo, ten paciencia.${endColour}"
-
+    print_msg "${greenColour}${rev}[*] Cleaning everything, have patience.${endColour}"
+    start_spinner
     # Corregir permisos de función de bspc para sudo su
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
@@ -638,7 +672,7 @@ function clean_bspwm() {
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
-        
+
         # Instala blackarch repositories
         print_msg "${greenColour}${rev}[*] Install blackarch.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
@@ -678,7 +712,7 @@ function clean_bspwm() {
         exec_cmd pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
 
         # Mensaje de habilitación de servicios
-        print_msg "${greenColour}${rev}Habilitando demonios.${endColour}"
+        print_msg "${greenColour}${rev}[*] Enabling services.${endColour}"
 
         # Configurar teclado
         exec_cmd localectl set-x11-keymap es 
@@ -718,20 +752,44 @@ function clean_bspwm() {
         exec_cmd apt-get clean
         exec_cmd apt autoclean
     else
-        print_msg "\n${redColour}${rev}The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
+        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
-
+    
+    stop_spinner
     # Actualizar base de datos de locate
+    print_msg "\n\t${cianColour}${rev}[!] Updating the locate database please have patience.${endColour}" 
+    start_spinner
     exec_cmd updatedb
+    stop_spinner
 }
 
 # Función para cerrar sesión y reiniciar el sistema
 function shutdown_session(){
-    # Mensaje de aviso
-    print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
-    echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
+    print_msg "\n\t${cianColour}${rev}[*] We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
+    if  hash pacman 2>/dev/null; then
+    # Arch Linux - usar systemd
+        cat > /etc/systemd/system/clear-tmp-files.service << EOF
+    [Unit]
+    Description=Clear tmp files on boot
+
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/sh -c ': > /tmp/target; : > /tmp/name'
+    User=${REAL_USER}
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    
+    systemctl enable clear-tmp-files.service
+    
+    elif hash apt 2>/dev/null; then
+        # Debian/Ubuntu - usar crontab
+        echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
+    fi
+
     # Esperar antes de reiniciar
-    sleep 10
+    sleep 5
     # Reiniciar sistema
     exec_cmd systemctl reboot
 }
