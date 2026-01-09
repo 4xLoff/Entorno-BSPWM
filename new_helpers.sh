@@ -106,7 +106,7 @@ stop_spinner() {
     if [[ -n "$spinner_pid" ]]; then 
         kill $spinner_pid 2>/dev/null 
         wait $spinner_pid 2>/dev/null 
-        printf "\r${greenColour}[✓]${endColour} Done!\n" 
+        printf "\r${greenColour}[*]${endColour}${cianColour} Done${endColour}\n" 
         tput cnorm 
         unset spinner_pid 
     fi 
@@ -125,7 +125,8 @@ helpPanel() {
     print_msg "\t${redColour}${rev}[-h] Show this help panel.${endColour}"
     print_msg "\n${greenColour}${rev}Example:${endColour}"
     print_msg "\t${greenColour}${bold}sudo bash $0 -d debian -l -s -m${endColour}"
-    tput cnorm; exit 1
+    tput cnorm
+    exit 1
 }
 
 # Verifica que el script se ejecute con sudo pero no como root directo
@@ -196,7 +197,7 @@ function check_os() {
 
     # Instalación para sistemas basados en Debian
     if hash apt 2>/dev/null; then
-        print_msg "\n${greenColour}${grisBg}${bold}[*] The system is Debian.${endColour}\n"
+        print_msg "\n${greenColour}${grisBg}${bold}[*] The system is Debian.${endColour}"
         print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Debian.${endColour}\n"
 
         # Remueve versiones conflictivas de codium y neovim
@@ -277,7 +278,7 @@ function check_os() {
 
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
-        print_msg "\n${blueColour}${grisBg}${bold}[*] The system is Arch Linux.${endColour}\n"
+        print_msg "\n${blueColour}${grisBg}${bold}[*] The system is Arch Linux.${endColour}"
         print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Arch Linux.${endColour}\n"
 
         # Array de paquetes necesarios para BSPWM en Arch
@@ -301,7 +302,7 @@ function check_os() {
         # Instala paquetes con pacman
         for package in "${packages_bspwm_arch[@]}"; do
             if exec_cmd pacman -Qi "${package}" &>/dev/null; then
-               print_msg "${blueColour}${rev}[✓] Package => ${endColour}${blueColour}${grisBg}${bold} ${package} ${endColour}${blueColour}${rev}already installed (skipped). ${endColour}"
+               print_msg "${blueColour}${rev}[✓] Package => ${endColour}${blueColour}${grisBg}${bold} ${package} ${endColour}${blueColour}${rev}Already installed (skipped). ${endColour}"
                continue
             elif exec_cmd pacman -S --noconfirm "${package}"; then
                print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
@@ -331,7 +332,7 @@ function check_os() {
         exec_cmd mkswap /swapfile                    # Formatea el archivo como área de swap
         exec_cmd swapon /swapfile                    # Activa el swap (lo usa el sistema)
         
-        print_msg "${redColour}${grisBg}${bold}[*] If the polybar doesn't compile, compile it separately and reload it with Alt + r.${endColour}"
+        print_msg "${redColour}${rev}If the polybar doesn't compile, compile it separately and reload it with Super + Alt + r.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         
         # Clona y compila polybar
@@ -505,12 +506,12 @@ function bspwm_enviroment() {
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
         # Leer respuesta del usuario
-        read -rp "$(printf "%b" "${orangeColour}[*] Install s4vitar's BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
+        read -rp "$(printf "%b" "${orangeColour}[*] Set s4vitar's BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
         case "${entorno,,}" in 
             # Opción sí
             y|yes|yey)
                 # Mensaje de instalación
-                print_msg "${greenColour}${rev}[*] Installing s4vitar's themes.${endColour}"
+                print_msg "${greenColour}${rev}[*] Set s4vitar's themes.${endColour}"
                 # Cambiar script de lanzamiento de polybar en bspwm
                 exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
                 break
@@ -661,27 +662,24 @@ function clean_bspwm() {
     # Corregir permisos de función de bspc para sudo su
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
-    # Eliminar directorio de instalación si existe
-    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
-
     if hash pacman 2>/dev/null; then
         
         # Instala paru (AUR helper)
-        print_msg "${greenColour}${rev}[*] Install paru.${endColour}"
+        print_msg "${greenColour}${rev} Install paru.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala blackarch repositories
-        print_msg "${greenColour}${rev}[*] Install blackarch.${endColour}"
+        print_msg "${greenColour}${rev} Install blackarch.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" curl -O https://blackarch.org/strap.sh
         chmod +x strap.sh
         exec_cmd ./strap.sh
 
         # Instala yay (otro AUR helper)
-        print_msg "${greenColour}${rev}[*] Install aur.${endColour}"
+        print_msg "${greenColour}${rev} Install aur.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
@@ -692,14 +690,14 @@ function clean_bspwm() {
         exec_cmd pacman -Syu --overwrite '*' --noconfirm
 
         # Instala snap repositories
-        print_msg "${greenColour}${rev}[*] Install snap.${endColour}"
+        print_msg "${greenColour}${rev} Install snap.${endColour}"
         cd "${INSTALL_DIR}" || exit 1 
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/snapd.git       
         cd "${INSTALL_DIR}/snapd"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
         exec_cmd systemctl enable --now snapd.socket
         exec_cmd systemctl restart snapd.service
-        print_msg "%b\n"  "${greenColour}${rev}Install Tools snap${endColour}"
+        print_msg "%b\n"  "${greenColour}${rev} Install Tools snap${endColour}"
         snap install node --classic
         
         # Limpiar caché de pacman
@@ -712,7 +710,7 @@ function clean_bspwm() {
         exec_cmd pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
 
         # Mensaje de habilitación de servicios
-        print_msg "${greenColour}${rev}[*] Enabling services.${endColour}"
+        print_msg "${greenColour}${rev} Enabling services.${endColour}"
 
         # Configurar teclado
         exec_cmd localectl set-x11-keymap es 
@@ -790,6 +788,9 @@ EOF
 
     # Esperar antes de reiniciar
     sleep 5
+    
+    # Eliminar directorio de instalación si existe
+    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
     # Reiniciar sistema
     exec_cmd systemctl reboot
 }
@@ -877,8 +878,6 @@ elif [[ "$Mode" == "archlinux" ]]; then
 else
     print_msg "${redColour}[x] Invalid mode.${endColour}"
     helpPanel
-    tput cnorm
-    exit 1
 fi
 
 tput cnorm
