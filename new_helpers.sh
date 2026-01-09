@@ -138,7 +138,13 @@ check_sudo() {
     if [ "${CURRENT_UID}" -eq 0 ] && \
        [ "${PARENT_PROCESS}" = "sudo" ] && \
        [ "${REAL_USER}" != "root" ]; then
-        print_msg "\n${greenColour}${grisBg}${bold}[*] Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
+       
+       print_msg "\n${greenColour}${grisBg}${bold}[*] Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
+       
+       # Mantener sudo activo durante todo el script 
+       sudo -v ( while true; do sudo -v; sleep 60; done ) & 
+       SUDO_KEEPALIVE_PID=$!
+        
     else
         print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution${endColour}"
         helpPanel
@@ -153,7 +159,10 @@ ctrl_c() {
 
     # Si la diferencia entre ahora y el último CTRL+C es menor a 1 segundo, sale
     if (( now - last < 1 )); then
-        print_msg "\n${redColour}${rev}[x] Exiting...${endColour}"
+        print_msg "\n${redColour}${rev}[x] Exiting... ${endColour}"
+        
+        # Matar proceso keep-alive de sudo 
+        [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 
         # Limpia el directorio de instalación antes d.e salir
         [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
@@ -161,7 +170,7 @@ ctrl_c() {
         tput cnorm
         exit 1
     fi
-    print_msg "\n${redColour}${grisBg}${bold}[!] Press CTRL+C twice in a row to exit${endColour}"
+    print_msg "\n${redColour}${grisBg}${bold}[!] Press CTRL+C twice in a row to exit. ${endColour}"
     last=$now
     return 0
 }
@@ -191,14 +200,14 @@ function check_os() {
     if (( ${#ENTORNOS[@]} > 0 )); then
         for dir in "${ENTORNOS[@]}"; do
             sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
-            print_msg "\n${magentaColour}${rev}[!] The directory was moved successfully.${endColour}"
+            print_msg "\n${magentaColour}${rev}[!] The directory was moved successfully. ${endColour}"
         done
     fi
 
     # Instalación para sistemas basados en Debian
     if hash apt 2>/dev/null; then
-        print_msg "\n${greenColour}${grisBg}${bold}[*] The system is Debian.${endColour}"
-        print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Debian.${endColour}\n"
+        print_msg "\n${greenColour}${grisBg}${bold}[*] The system is Debian. ${endColour}"
+        print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Debian. ${endColour}\n"
 
         # Remueve versiones conflictivas de codium y neovim
         exec_cmd apt-get remove --purge codium -y
@@ -243,7 +252,7 @@ function check_os() {
             fi
         done 
 
-        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd.${endColour}"
+        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
 
         # Clona los repositorios de bspwm y sxhkd
@@ -260,7 +269,7 @@ function check_os() {
         exec_cmd make
         exec_cmd make install 
 
-        print_msg "${greenColour}${rev}[*] Polybar compilation please have patience.${endColour}"
+        print_msg "${greenColour}${rev}[*] Polybar compilation please have patience. ${endColour}"
         start_spinner
         cd "${INSTALL_DIR}" || exit 1
 
@@ -278,8 +287,8 @@ function check_os() {
 
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
-        print_msg "\n${blueColour}${grisBg}${bold}[*] The system is Arch Linux.${endColour}"
-        print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Arch Linux.${endColour}\n"
+        print_msg "\n${blueColour}${grisBg}${bold}[*] The system is Arch Linux. ${endColour}"
+        print_msg "\n${yellowColour}${rev}[!] Installing only the bspwm environment for Arch Linux. ${endColour}\n"
 
         # Array de paquetes necesarios para BSPWM en Arch
         packages_bspwm_arch=(
@@ -312,7 +321,7 @@ function check_os() {
         done
 
         # Clona y compila bspwm y sxhkd desde source
-        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd.${endColour}"
+        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
@@ -324,7 +333,7 @@ function check_os() {
         exec_cmd make install 
         
         # Crea un archivo swap temporal de 2GB para la compilación de polybar
-        print_msg "${greenColour}${rev}[*] Creating swap and compiling Polybar for Arch Linux please have patience.${endColour}"
+        print_msg "${greenColour}${rev}[*] Creating swap and compiling Polybar for Arch Linux please have patience. ${endColour}"
         start_spinner
         sleep 5
         exec_cmd fallocate -l 2G /swapfile           # Crea un archivo de 2GB para usar como memoria virtual
@@ -332,7 +341,7 @@ function check_os() {
         exec_cmd mkswap /swapfile                    # Formatea el archivo como área de swap
         exec_cmd swapon /swapfile                    # Activa el swap (lo usa el sistema)
         
-        print_msg "${redColour}${rev}If the polybar doesn't compile, compile it separately and reload it with Super + Alt + r.${endColour}"
+        print_msg "${redColour}${rev}If the polybar doesn't compile, compile it separately and reload it with Super + Alt + r. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         
         # Clona y compila polybar
@@ -355,7 +364,7 @@ function check_os() {
         
     # Si no es Debian ni Arch, sale con error
     else
-        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux.${endColour}"
+        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
         helpPanel
     fi
 }
@@ -364,11 +373,11 @@ function check_os() {
 function bspwm_enviroment() {
 
     # Instala foo-Wallpaper para wallpapers animados
-    print_msg "${greenColour}${rev}[*] Install Foo Wallpaper.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install Foo Wallpaper. ${endColour}"
     exec_cmd curl -L https://raw.githubusercontent.com/thomas10-10/foo-Wallpaper-Feh-Gif/master/install.sh | bash
      
     # Descarga tema blue-sky
-    print_msg "${greenColour}${rev}[*] Configure polybar fonts.${endColour}"
+    print_msg "${greenColour}${rev}[*] Configure polybar fonts. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/VaughnValle/blue-sky.git
 
@@ -381,7 +390,7 @@ function bspwm_enviroment() {
     popd &>/dev/null 
     
     # Descarga e instala Hack Nerd Fonts
-    print_msg "${greenColour}${rev}[*] Install Hack Nerd Fonts.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install Hack Nerd Fonts. ${endColour}"
     cd "${INSTALL_DIR}" || exit 
     exec_cmd wget -q https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Hack.zip
     mkdir -p /usr/local/share/fonts/
@@ -392,7 +401,7 @@ function bspwm_enviroment() {
     popd &>/dev/null
 
     # Clona y compila picom (compositor)
-    print_msg "${greenColour}${rev}[*] Picom compilation please have patience.${endColour}"
+    print_msg "${greenColour}${rev}[*] Picom compilation please have patience. ${endColour}"
     start_spinner
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
@@ -405,44 +414,44 @@ function bspwm_enviroment() {
     stop_spinner
 
     # Instala powerlevel10k para el usuario y para root
-    print_msg "${greenColour}${rev}[*] Download powerlevel10k.${endColour}"
+    print_msg "${greenColour}${rev}[*] Download powerlevel10k. ${endColour}"
     exec_cmd sudo -u "${REAL_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
     exec_cmd git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
     # Copia wallpapers al directorio Pictures del usuario
-    print_msg "${greenColour}${rev}[*] Configuration wallpaper.${endColour}"
+    print_msg "${greenColour}${rev}[*] Configuration wallpaper. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/Pictures"
     cp "${INSTALL_DIR}"/Entorno-BSPWM/*.png "${USER_HOME}/Pictures" 
     cp "${INSTALL_DIR}"/Entorno-BSPWM/*.gif "${USER_HOME}/Pictures"
 
     # Instala plugin sudo para zsh
-    print_msg "${greenColour}${rev}[*] Install plugin sudo.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install plugin sudo. ${endColour}"
     mkdir /usr/share/zsh-sudo
     exec_cmd wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/sudo/sudo.plugin.zsh
     cp sudo.plugin.zsh /usr/share/zsh-sudo/ 
 
     # Instala bat (cat mejorado)
-    print_msg "${greenColour}${rev}[*] Install batcat.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install batcat. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd wget -q https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-musl_0.24.0_amd64.deb
     exec_cmd dpkg -i bat-musl_0.24.0_amd64.deb
 
     # Instala lsd (ls mejorado)
-    print_msg "${greenColour}${rev}[*] Install lsd.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install lsd. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1 
     exec_cmd wget -q https://github.com/lsd-rs/lsd/releases/download/v1.0.0/lsd-musl_1.0.0_amd64.deb
     exec_cmd dpkg -i lsd-musl_1.0.0_amd64.deb
 
     # Instala fzf (fuzzy finder) para el usuario y para root
-    print_msg "${greenColour}${rev}[*] Install fzf.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install fzf. ${endColour}"
     exec_cmd sudo -u "${REAL_USER}" git clone --depth 1 https://github.com/junegunn/fzf.git "${USER_HOME}/.fzf"
     exec_cmd sudo -u "${REAL_USER}" "${USER_HOME}/.fzf/install" --all
     exec_cmd git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
     exec_cmd ~/.fzf/install --all
 
     # Descarga e instala neovim
-    print_msg "${greenColour}${rev}[*] Install nvchad.${endColour}" 
+    print_msg "${greenColour}${rev}[*] Install nvchad. ${endColour}" 
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd wget -q https://github.com/neovim/neovim/releases/download/v0.11.3/nvim-linux-x86_64.tar.gz
     exec_cmd tar xzvf nvim-linux-x86_64.tar.gz
@@ -465,13 +474,13 @@ function bspwm_enviroment() {
     sed -i "3i ${line}" "/root/.config/nvim/init.lua"
 
     # Descarga temas de polybar
-    print_msg "${greenColour}${rev}[*] Install themes polybar.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install themes polybar. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd git clone https://github.com/adi1090x/polybar-themes.git
     cd polybar-themes
 
     # Copia configuraciones del tema polybar
-    print_msg "${greenColour}${rev}[*] Move files configuration.${endColour}"
+    print_msg "${greenColour}${rev}[*] Move files configuration. ${endColour}"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/" "${USER_HOME}/.config/polybar/"
 
     # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
@@ -511,7 +520,7 @@ function bspwm_enviroment() {
             # Opción sí
             y|yes|yey)
                 # Mensaje de instalación
-                print_msg "${greenColour}${rev}[*] Set s4vitar's themes.${endColour}"
+                print_msg "${greenColour}${rev}[*] Set s4vitar's themes. ${endColour}"
                 # Cambiar script de lanzamiento de polybar en bspwm
                 exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
                 break
@@ -526,7 +535,7 @@ function bspwm_enviroment() {
 
               # Opción inválida
             *)
-                print_msg "\n${redColour}${rev}[x] That option is invalid. Please enter a valid option.${endColour}\n" 
+                print_msg "\n${redColour}${rev}[x] That option is invalid please enter a valid option. ${endColour}\n" 
                 continue
                 ;;
         esac
@@ -564,25 +573,25 @@ function bspwm_enviroment() {
     chown "${REAL_USER}:${REAL_USER}" "/root/.local" -R
 
     # Instalación de Visual Studio Code
-    print_msg "${greenColour}${rev}[*] Install Visual Studio Code.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install Visual Studio Code. ${endColour}"
     exec_cmd curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
     exec_cmd dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
 
     # Install GO 
-    print_msg "${greenColour}${rev}[*] Install go.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install Go. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd wget -q https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
     exec_cmd rm -rf /usr/local/go && tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
 
     # Install fastTCPscan
-    print_msg "${greenColour}${rev}[*] Install fastTCPscan.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install fastTCPscan. ${endColour}"
     cp "${INSTALL_DIR}/Entorno-BSPWM/fastTCPscan.go" "/opt/fastTCPscan"
     chmod 755 /opt/fastTCPscan
     ln -s -f "/opt/fastTCPscan" "/usr/local/bin/fastTCPscan"
 
     # Install whichSystem
-    print_msg "${greenColour}${rev}[*] Install whichSystem.${endColour}"
+    print_msg "${greenColour}${rev}[*] Install whichSystem. ${endColour}"
     mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
@@ -593,7 +602,7 @@ function latex_env(){
     cd "${INSTALL_DIR}" || exit 1
     exec_cmd wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v1.10.3/obsidian_1.10.3_amd64.deb
     exec_cmd dpkg -i obsidian_1.10.3_amd64.deb
-    print_msg "${greenColour}${rev}[*] The latex environment will be installed, this will take more than 30 minutes approximately.${endColour}"
+    print_msg "${greenColour}${rev}[*] The latex environment will be installed, this will take more than 30 minutes approximately. ${endColour}"
     start_spinner
     
     if hash pacman 2>/dev/null; then
@@ -602,7 +611,7 @@ function latex_env(){
         # Para Kali, Parrot, Ubuntu y otros sistemas basados en Debian
         exec_cmd apt-get install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
     else
-        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
+        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
     
     stop_spinner
@@ -624,7 +633,7 @@ function spotify_env(){
     sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
 
     # Mensaje de instalación
-    print_msg "${greenColour}${rev}[*] Instalando Spotify.${endColour}"
+    print_msg "${greenColour}${rev}[*] Instalando Spotify. ${endColour}"
 
     if hash pacman 2>/dev/null; then
 
@@ -657,29 +666,29 @@ function spotify_env(){
 function clean_bspwm() {
 
     # Mensaje de limpieza
-    print_msg "${greenColour}${rev}[*] Cleaning everything, have patience.${endColour}"
+    print_msg "${greenColour}${rev}[*] Cleaning everything, have patience. ${endColour}"
     start_spinner
     # Corregir permisos de función de bspc para sudo su
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
     if hash pacman 2>/dev/null; then
         
-        # Instala paru (AUR helper)
-        print_msg "${greenColour}${rev} Install paru.${endColour}"
+        # Instala paru (AUR)
+        print_msg "${greenColour}${rev} Install Paru. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala blackarch repositories
-        print_msg "${greenColour}${rev} Install blackarch.${endColour}"
+        print_msg "${greenColour}${rev} Install Blackarch. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" curl -O https://blackarch.org/strap.sh
         chmod +x strap.sh
         exec_cmd ./strap.sh
 
-        # Instala yay (otro AUR helper)
-        print_msg "${greenColour}${rev} Install aur.${endColour}"
+        # Instala yay (otro AUR)
+        print_msg "${greenColour}${rev} Install yay. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
@@ -690,14 +699,14 @@ function clean_bspwm() {
         exec_cmd pacman -Syu --overwrite '*' --noconfirm
 
         # Instala snap repositories
-        print_msg "${greenColour}${rev} Install snap.${endColour}"
+        print_msg "${greenColour}${rev} Install snap. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1 
         exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/snapd.git       
         cd "${INSTALL_DIR}/snapd"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
         exec_cmd systemctl enable --now snapd.socket
         exec_cmd systemctl restart snapd.service
-        print_msg "%b\n"  "${greenColour}${rev} Install Tools snap${endColour}"
+        print_msg "%b\n"  "${greenColour}${rev} Install Tools snap. ${endColour}"
         snap install node --classic
         
         # Limpiar caché de pacman
@@ -710,7 +719,7 @@ function clean_bspwm() {
         exec_cmd pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
 
         # Mensaje de habilitación de servicios
-        print_msg "${greenColour}${rev} Enabling services.${endColour}"
+        print_msg "${greenColour}${rev} Enabling services. ${endColour}"
 
         # Configurar teclado
         exec_cmd localectl set-x11-keymap es 
@@ -749,12 +758,12 @@ function clean_bspwm() {
         exec_cmd apt-get clean
         exec_cmd apt autoclean
     else
-        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
+        print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
     
     stop_spinner
     # Actualizar base de datos de locate
-    print_msg "\n\t${cianColour}${rev}[!] Updating the locate database please have patience.${endColour}" 
+    print_msg "\n\t${cianColour}${rev}[!] Updating the locate database please have patience. ${endColour}" 
     start_spinner
     exec_cmd updatedb
     stop_spinner
@@ -762,8 +771,12 @@ function clean_bspwm() {
 
 # Función para cerrar sesión y reiniciar el sistema
 function shutdown_session(){
-    print_msg "\n\t${cianColour}${rev}[*] We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
-    if  hash pacman 2>/dev/null; then
+    print_msg "\n\t${cianColour}${rev}[*] We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
+    
+    # Matar proceso keep-alive de sudo 
+    [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
+    
+    if hash pacman 2>/dev/null; then
         # <<-EOF permite indentar el contenido del here-document usando TABs reales, ya que Bash los elimina automáticamente, evitando errores por indentación, mientras que el delimitador `EOF` final siempre debe ir sin espacios.
         cat > /etc/systemd/system/clear-tmp-files.service << EOF
 [Unit]
@@ -785,12 +798,13 @@ EOF
         # Debian/Ubuntu - usar crontab
         echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
     fi
-
+    
     # Esperar antes de reiniciar
     sleep 5
     
     # Eliminar directorio de instalación si existe
     [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
+    
     # Reiniciar sistema
     exec_cmd systemctl reboot
 }
@@ -808,8 +822,8 @@ while getopts "d:lsmh" arg; do
         l) latex=true ;;
         s) spotify=true ;;
         m) MUTE_MODE=true ;;
-        h) print_msg "${redColour}${rev}Menu de ayuda.${endColour}"; helpPanel ;; 
-        *) print_msg "${redColour}${rev}Opción invalida.${endColour}"; helpPanel ;;
+        h) print_msg "${redColour}${rev}Menu de ayuda. ${endColour}"; helpPanel ;; 
+        *) print_msg "${redColour}${rev}Opción invalida. ${endColour}"; helpPanel ;;
     esac
 done
 
@@ -819,7 +833,7 @@ shift $((OPTIND - 1))
 
 # Verificar que el modo fue definido
 if [[ -z "${Mode:-}" ]]; then 
-    print_msg "${redColour}${rev}[x] Faltan opciones obligatorias.${endColour}"
+    print_msg "${redColour}${rev}[x] Faltan opciones obligatorias. ${endColour}"
     helpPanel
 fi 
 
@@ -876,9 +890,11 @@ elif [[ "$Mode" == "archlinux" ]]; then
 
 # Caso inválido
 else
-    print_msg "${redColour}[x] Invalid mode.${endColour}"
+    print_msg "${redColour}[x] Invalid mode. ${endColour}"
     helpPanel
 fi
 
+# Limpiar keep-alive si no se reinició 
+[[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 tput cnorm
 exit 0 
