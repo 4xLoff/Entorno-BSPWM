@@ -87,7 +87,7 @@ print_msg() {
 
 spinner() { 
     local delay=0.1 
-    local spinstr='|/-\'
+    local spinstr='|/-\' 
     while true; do 
         local temp=${spinstr#?} 
         printf "\r${greenColour}[%c]${endColour} " "$spinstr" 
@@ -554,8 +554,8 @@ function bspwm_enviroment() {
     ln -s -f "${USER_HOME}/.zshrc" "/root/.zshrc"
 
     # Cambiar shell por defecto a zsh
-    usermod --shell /usr/bin/zsh "$REAL_USER"
-    usermod --shell /usr/bin/zsh root
+    usermod --shell /usr/bin/zsh "$REAL_USER" &>/dev/null
+    usermod --shell /usr/bin/zsh root  &>/dev/null
 
     # Ajustar propietarios de directorios de root
     chown "${REAL_USER}:${REAL_USER}" "/root"     # Esto no cambia la propiedad de root pero si permite sudo su conserve el entorno
