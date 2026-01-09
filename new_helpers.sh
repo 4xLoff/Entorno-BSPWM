@@ -92,7 +92,7 @@ helpPanel() {
     print_msg "\t\t${magentaColour}${grisBg}${bold}debian${endColour}\t\t\t${yellowColour}${rev}Distribution Debian nesesary =< 60 gb.${endColour}"
     print_msg "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary =< 60 gb.${endColour}"
     print_msg "\t${blueColour}${rev}Opcionales:${endColour}"
-    print_msg "\t\t${magentaColour}${rev}[-c]${endColour}\t\t\t${greenColour}${rev}Core package Hacking (Only for more than 90 gb)${endColour}"
+    print_msg "\t\t${magentaColour}${rev}[-c]${endColour}\t\t\t${greenColour}${rev}Core package Hacking (Only for more than 120 gb)${endColour}"
     print_msg "\t\t${cianColour}${rev}[-r]${endColour}\t\t\t${greenColour}${rev}Repositories GitHub (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${magentaColour}${rev}[-l]${endColour}\t\t\t${greenColour}${rev}LaTeX environment (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${cianColour}${rev}[-s]${endColour}\t\t\t${greenColour}${rev}Spotify (Only for more than 16 gb RAM)${endColour}"
@@ -148,8 +148,6 @@ function check_os() {
 
     # Crea el directorio de instalación como el usuario real
     sudo -u "${REAL_USER}" mkdir -p "${INSTALL_DIR}"
-    sudo -u "${REAL_USER}" touch /tmp/name 
-    sudo -u "${REAL_USER}" touch /tmp/target
 
     # Busca directorios existentes llamados "Entorno-BSPWM" fuera del INSTALL_DIR
     ENTORNOS=()
@@ -208,14 +206,16 @@ function check_os() {
         ranger lxappearance xdo xdotool wmctrl xclip 
         fontconfig bd bc seclists locate neofetch)
 
-        # Instala cada paquete y muestra si tuvo éxito o falló
         for package in "${packages_bspwm_debian[@]}"; do
-            if exec_cmd apt-get install "${APT_FLAGS[@]}" "${package}"; then
+            if exec_cmd dpkg -l "${package}" 2>/dev/null | grep -q "^ii"; then
+                print_msg "${blueColour}${rev}[✓] Package => ${endColour}${blueColour}${grisBg}${bold} ${package} ${endColour}${blueColour}${rev}Already installed (skipped). ${endColour}"
+                continue
+            elif exec_cmd apt-get install "${APT_FLAGS[@]}" "${package}"; then
                 print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
             else
                 print_msg "${yellowColour}${rev}[!] Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
             fi
-        done  
+        done 
 
         print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd.${endColour}"
         cd "${INSTALL_DIR}" || exit 1
@@ -273,10 +273,13 @@ function check_os() {
 
         # Instala paquetes con pacman
         for package in "${packages_bspwm_arch[@]}"; do
-            if exec_cmd pacman -S "${package}" --noconfirm --needed ; then
-                print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
+            if exec_cmd pacman -Qi "${package}" &>/dev/null; then
+               print_msg "${blueColour}${rev}[✓] Package => ${endColour}${blueColour}${grisBg}${bold} ${package} ${endColour}${blueColour}${rev}already installed (skipped). ${endColour}"
+               continue
+            elif exec_cmd pacman -S --noconfirm "${package}"; then
+               print_msg "${greenColour}${rev}[*] Package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}installed. ${endColour}"
             else
-                print_msg "${yellowColour}${rev}[!] Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
+               print_msg "${yellowColour}${rev}[!] Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
             fi
         done
 
@@ -468,14 +471,11 @@ function bspwm_enviroment() {
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
 
-
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
         # Leer respuesta del usuario
         read -rp "$(printf "%b" "${orangeColour}[*] Install s4vitar's BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
-
         case "${entorno,,}" in 
-
             # Opción sí
             y|yes|yey)
                 # Mensaje de instalación
@@ -487,10 +487,8 @@ function bspwm_enviroment() {
 
             # Opción no o enter
             ""|n|no|nay)
-
                 # Copiar configuración de polybar forest
                 exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
-
                 break
                 ;;
 
@@ -515,8 +513,8 @@ function bspwm_enviroment() {
     chmod +x "${USER_HOME}/.config/polybar/emili/scripts/target_to_hack"
 
     # Crear archivos temporales usados por polybar
-    chown "${REAL_USER}:${REAL_USER}" "/tmp/name"
-    chown "${REAL_USER}:${REAL_USER}" "/tmp/target"
+    touch /tmp/{name,target}
+    chown "${REAL_USER}:${REAL_USER}" /tmp/{name,target}
 
     # Asignar propietario correcto al archivo
     chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
@@ -537,435 +535,13 @@ function bspwm_enviroment() {
     print_msg "${greenColour}${rev}[*] Install Visual Studio Code.${endColour}"
     exec_cmd curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
     exec_cmd dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
-}
 
-
-function update_debian() {
-    print_msg "${greenColour}${rev}[*] Installing additional packages for the correct functioning of the environment Hacking.${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd apt-get remove --purge python3-unicodecsv -y
-    exec_cmd apt-get remove --purge burpsuite -y
-
-    # Verificar si es Kali Linux y configurar wine
-    if [[ -f /etc/os-release && $(grep -q "kali" /etc/os-release; echo $?) -eq 0 ]]; then
-        print_msg "${blueColour}${rev}[*] Configuring wine for Kali Linux.${endColour}"
-        exec_cmd dpkg --add-architecture i386
-    fi 
-
-    # PAQUETES DE HACKING, PENTESTING, DESARROLLO Y UTILIDADES
-    packages_tools_debian=(
-    # Librerías de desarrollo
-    libbsd-dev libbz2-dev libconfig-dev libxcursor-dev
-    libdb5.3-dev libdbus-1-dev libemail-outlook-message-perl
-    libev-dev libevdev-dev libffi-dev libfontconfig1-dev
-    libgdbm-dev libglib2.0-dev libharfbuzz-dev
-    liblcms2-2 libldap2-dev liblzma-dev libmemcached-tools
-    libncurses5-dev libncursesw5-dev libnetfilter-queue-dev
-    libpcap-dev libpcre2-dev libpcre3-dev libpng16-16
-    libpopt-dev libprotobuf-dev libproxychains4 libpst-dev
-    libpython3-dev libqt5sensors5 libqt5webkit5
-    libreadline-dev librsync-dev libsasl2-dev libsmbclient
-    libsqlite3-dev libssl-dev libxxhash-dev uthash-dev
-    protobuf-compiler zlib1g-dev
-
-    # Librerías adicionales
-    libnl-3-dev libnl-genl-3-dev libxml2-dev libxslt1-dev 
-    libjpeg62-turbo-dev libaio1
-
-    # Utilidades básicas
-    acl adb antiword apktool aptitude apt-transport-https
-    autoconf awscli binwalk
-
-    # Herramientas de sistema
-    alien axel dtrx git-cola
-
-    # Build tools
-    build-essential gcc gcc-multilib pkg-config
-    dh-autoreconf 
-
-    # Navegadores/visualizadores texto
-    pandoc lynx 
-
-    # Hacking - Reconocimiento
-    bloodhound nmap amass gospider sublist3r dnsrecon
-    snmp snmp-mibs-downloader whatweb masscan
-
-    # Hacking - Explotación
-    bruteforce-luks crackmapexec exploitdb
-    impacket-scripts python3-impacket netexec
-    powershell-empire powersploit veil
-
-    # Hacking - Passwords
-    hash-identifier sucrack
-
-    # Hacking - Web
-    cadaver cewl cutycapt davtest ffuf gobuster
-    hurl skipfish phpggc wfuzz weevely eaphammer
-    zaproxy
-
-    # Hacking - Windows/AD
-    enum4linux enum4linux-ng gss-ntlmssp
-    krb5-user smbmap
-
-    # Hacking - Cloud
-    cloud-enum pacu
-
-    # Bases de datos
-    crunch default-mysql-client derby-tools
-    mdbtools odat pgcli squidclient tnscmd10g
-
-    # Reversing y Forense
-    binwalk dex2jar exiftool extundelete hexedit
-    jadx jd-gui pdfid pdf-parser pst-utils radare2
-    steghide
-
-    # Redes - Análisis
-    tshark tcpdump
-
-    # Email
-    antiword claws-mail evolution libemail-outlook-message-perl
-    mutt sendemail sendmail swaks
-
-    # Documentos y Office
-    djvulibre-bin evince libreoffice tesseract-ocr xpdf
-
-    # Criptografía
-    encfs gpp-decrypt kpcli
-
-    # Contenedores y virtualización
-    docker.io glusterfs-server lxc snap snapd
-
-    # Desarrollo - Lenguajes
-    cargo maven mingw-w64-tools mono-devel
-    nodejs npm php-curl python3-ldap 
-    python3-ldapdomaindump rails ruby ruby-dev
-
-    # Redes y conectividad
-    cifs-utils freerdp2-dev freerdp2-x11 fuse
-    inetutils-ftp irssi kcat knockd lftp
-    ncat pidgin putty-tools rdesktop redis-tools
-    samba tigervnc-viewer xtightvncviewer
-
-    # Pentesting tools específicos
-    padbuster peass powercat shellter
-    sprayingtoolkit
-
-    # Utilidades varias
-    flite gimp hexchat imagemagick locate neo4j 
-    qrencode recordmydesktop rlwrap 
-    software-properties-common translate-shell 
-    wayland-protocols wkhtmltopdf wmis zbar-tools dex
-
-    # Python
-    python3 python3-dev python3-pip python3-venv
-    python3-qtpy ipython3 pipx
-
-    # Contenedores
-    docker docker-compose lxc
-
-    # Navegadores
-    chromium firefox
-
-    # Filesystems
-    ntfs-3g
-
-    # Otros
-    bc dc keepassxc html2text seclists
-    locate libreoffice xpdf jq)
-
-    for package in "${packages_tools_debian[@]}"; do
-        if exec_cmd apt-get install "${APT_FLAGS[@]}" "${package}"; then
-            printf "%b\n" "${greenColour}${rev}[*] The package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly. ${endColour}"
-        else
-            printf "%b\n" "${yellowColour}${rev}[*] The package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install. ${endColour}"
-        fi
-    done
-
-}
-
-function update_arch(){
-    print_msg "%b\n" "${greenColour}[*] Additional packages will be installed for the correct functioning of the environment Hacking.${endColour}"
-    cd "${INSTALL_DIR}" || exit
-
-        # Instala paru (AUR helper)
-        print_msg "${greenColour}${rev}[*] Install paru.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
-        cd "${INSTALL_DIR}/paru-bin"
-        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
-        
-        print_msg "${greenColour}${rev}[*] Install Tools paru${endColour}"
-        paru -S --skipreview tdrop-git xqp rofi-greenclip xwinwrap-0.9-bin ttf-maple i3lock-color simple-mtpfs eww-git --noconfirm
-
-        # Instala blackarch repositories
-        print_msg "${greenColour}${rev}[*] Install blackarch.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd sudo -u "${REAL_USER}" curl -O https://blackarch.org/strap.sh
-        chmod +x strap.sh
-        exec_cmd ./strap.sh
-
-        # Instala yay (otro AUR helper)
-        print_msg "${greenColour}${rev}[*] Install aur.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
-        cd "${INSTALL_DIR}/yay"
-        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
-
-        # Instala paquetes adicionales desde AUR con yay
-        exec_cmd sudo -u "${REAL_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip neofetch xwinwrap-0.9-bin simple-mtpfs --noconfirm
-        exec_cmd pacman -Syu --overwrite '*' --noconfirm
-
-         # Instala snap repositories
-        print_msg "${greenColour}${rev}[*] Install snap.${endColour}"
-        cd "${INSTALL_DIR}" || exit 1 
-        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/snapd.git       
-        cd "${INSTALL_DIR}/snapd"
-        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
-        exec_cmd systemctl enable --now snapd.socket
-        exec_cmd systemctl restart snapd.service
-        print_msg "%b\n"  "${greenColour}${rev}Install Tools snap${endColour}"
-        snap install node --classic
-
-        # Listado único de todos los paquetes agrupados
-        packages_tools_arch=(
-        # Librerías base
-        libconfig libev libevdev libffi libglib2 
-        liblcms2 libldap libmemcached libpcap 
-        libpng16 libpopt libprotobuf libproxychains
-        proxychains libpst librsync libsasl2 
-        libwebp uthash 
-
-        # Herramientas básicas
-        acl adb antiword autoconf pkg-config
-
-        # Gestores de paquetes
-        pacman-contrib 
-
-        # Hacking - Reconocimiento
-        bloodhound nmap sublist3r dnsrecon 
-        gospider whatweb wafw00f
-
-        # Hacking - Explotación
-        bruteforce-luks exploitdb impacket 
-
-        # Hacking - Passwords
-        hash-identifier sucrack
-
-        # Hacking - Web
-        davtest cutycapt feroxbuster hurl 
-        skipfish phpggc
-
-        # Hacking - Windows/AD
-        enum4linux smbmap crackmapexec
-
-        # Hacking - Cloud/Redes
-        ligolo-ng
-
-        # Bases de datos
-        crunch mysql-clients sqlite3 mdbtools
-        dbeaver
-
-        # Reversing y Forense
-        binwalk dex2jar jadx radare2 steghide gdb
-
-        # Email
-        antiword claws-mail evolution mutt swaks
-
-        # Documentos
-        djvulibre   
-
-        # Criptografía
-        krb5 gnupg openssl
-
-        # Desarrollo - Lenguajes
-        cargo rustup go nodejs npm ruby maven
-        dotnet-sdk 
-
-        # Desarrollo - Herramientas
-        gcc-multilib emacs geany
-
-        # Desarrollo - Python
-        python-gobject python-ldap
-
-        # Redes y conectividad
-        cifs-utils freerdp inetutils irssi 
-        openssh rdesktop remmina samba 
-        tcpdump tigervnc lftp
-
-        # Pentesting tools específicos
-        padbuster peass shellter seclists 
-        sprayingtoolkit veil
-
-        # LDAP
-        slapd ldap-utils
-
-        # Utilidades varias
-        flite imagemagick gimp hexchat 
-        pdfid pdf-parser pidgin 
-        pngcrush qrencode recordmydesktop 
-        rlwrap translate-shell 
-        wayland-protocols webp-pixbuf-loader 
-        wkhtmltopdf xdg-user-dirs wine
-
-        # Python
-        python python-pip python-virtualenv
-        python-qtpy ipython python-pipx
-
-        # Contenedores
-        docker docker-compose lxc
-
-        # Navegadores
-        chromium firefox
-
-        # Filesystems
-        ntfs-3g
-
-        # Otros
-        bc dc keepassxc html2text seclists
-        mlocate libreoffice-fresh xpdf jq)    
-
-        for package in "${packages_tools_arch[@]}"; do
-            if exec_cmd pacman -S "${package}" --noconfirm --needed ; then
-                print_msg "${greenColour}${rev}[*] The package => ${endColour}${greenColour}${grisBg}${bold} ${package} ${endColour}${greenColour}${rev}has been installed correctly. ${endColour}"
-            else
-                print_msg "${yellowColour}${rev}[*] The package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev} didn't install. ${endColour}"
-            fi
-        done 
-}
-
-function core_package(){
-    # Install apps de python
-    # No instalar en sistema que esten produccion
-    # Eliminar restricción de pip
-    print_msg "${greenColour}${rev}[*] Install Python.${endColour}"
-    exec_cmd rm -f /usr/lib/python3*/EXTERNALLY-MANAGED 2>/dev/null
-
-    # Actualizar pip y otras (herramientas aisladas)
-    exec_cmd python3 -m pip install --upgrade pip pipx pwntools pyparsing
-
-    # Instalación con pipx
-    exec_cmd pipx install posting donpapi
-    exec_cmd pipx install git+https://github.com/brightio/penelope
-    exec_cmd pipx install git+https://github.com/blacklanternsecurity/MANSPIDER 
-
-    # Herramientas de pentesting (NO disponibles en APT o versión muy vieja)
-    exec_cmd sudo -H pip3 install -U minikerberos oletools xlrd wesng pwncat-cs git-dumper crawley certipy-ad jsbeautifier
-    exec_cmd sudo -H pip3 install -U git+https://github.com/blacklanternsecurity/trevorproxy 
-    exec_cmd sudo -H pip3 install -U git+https://github.com/decalage2/ViperMonkey/archive/master.zip
-    exec_cmd sudo -H pip3 install -U git+https://github.com/ly4k/ldap3 
-    exec_cmd sudo -H pip3 install --upgrade paramiko cryptography pyOpenSSL botocore minikerberos pyparsing cheroot wsgidav \
-      ezodf pyreadline3 oathtool pwncat-cs updog pypykatz html2markdown colored oletools droopescan uncompyle6 web3 \
-      acefile bs4 pyinstaller flask-unsign pyDes fake_useragent alive_progress githack bopscrk hostapd-mana six \
-      crawley certipy-ad chepy minidump aiowinreg msldap winacl pymemcache holehe xlrd wesng jsbeautifier
-
-    #Install gem Packeage
-    print_msg "${greenColour}${rev}[*] Install Ruby.${endColour}"
-    exec_cmd gem install evil-winrm http httpx docopt rest-client colored2 wpscan winrm-fs stringio logger fileutils winrm brakeman
-
-    # Install GO y Apps
+    # Install GO 
     print_msg "${greenColour}${rev}[*] Install go.${endColour}"
     cd "${INSTALL_DIR}" || exit 1
-
     exec_cmd wget -q https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
     exec_cmd rm -rf /usr/local/go && tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
-
-    exec_cmd go install github.com/hakluke/hakrawler@latest
-    mv ~/go/bin/hakrawler /usr/local/bin/
-
-    exec_cmd go install github.com/tomnomnom/waybackurls@latest
-    mv ~/go/bin/waybackurls /usr/local/bin/
-
-    exec_cmd go install github.com/lc/gau/v2/cmd/gau@latest
-    mv ~/go/bin/gau /usr/local/bin/
-
-    exec_cmdgo install github.com/ropnop/kerbrute@latest
-    mv ~/go/bin/kerbrute /usr/local/bin/
-
-    exec_cmd go install -v github.com/rverton/webanalyze/cmd/webanalyze@latest
-    mv ~/go/bin/webanalyze /usr/local/bin/
-
-    exec_cmd go install github.com/benbusby/namebuster@latest
-    mv ~/go/bin/namebuster /usr/local/bin/
-
-    exec_cmd go install github.com/Josue87/gotator@latest
-    mv ~/go/bin/gotator /usr/local/bin/ 
-
-    exec_cmd go install github.com/d3mondev/puredns/v2@latest
-    mv ~/go/bin/puredns /usr/local/bin/ 
-
-    exec_cmd go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-    mv ~/go/bin/grpcurl /usr/local/bin/
-
-    exec_cmd go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest 
-    mv ~/go/bin/subfinder /usr/local/bin/ 
-
-    exec_cmd go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest 
-    mv ~/go/bin/dnsx /usr/local/bin/
-
-    exec_cmd go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest CGO_ENABLED=1 
-    mv ~/go/bin/httpx /usr/local/bin/ 
-
-    exec_cmd go install github.com/projectdiscovery/katana/cmd/katana@latest
-    mv ~/go/bin/katana /usr/local/bin/ 
-
-    # Install snap
-    print_msg "${greenColour}${rev}[*] Install snap tools.${endColour}"
-    exec_cmd snap install ngrok storage-explorer
-    exec_cmd snap install snapcraft kubectl --classic
-
-    # Istall npm
-    print_msg "${greenColour}${rev}[*] Install npm tools.${endColour}"
-    exec_cmd npm install -g safe-backup wscat asar memcached-cli node-serialize slendr electron-packager
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd git clone https://github.com/qtc-de/remote-method-guesser
-    cd remote-method-guesser
-    exec_cmd mvn package
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd git clone https://github.com/CravateRouge/bloodyAD.git
-    cd bloodyAD
-    exec_cmd pip3 install . 
-
-    # Istall Docker Compose
-    print_msg "${greenColour}[*] Install docker Compose.${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    usermod -aG docker ${REAL_USER}
-    cd "${INSTALL_DIR}" || exit 1
-    sleep 1
-
-    # Esto es nesesario para instalar AvaloniaILSpy.
-    print_msg "${greenColour}${rev}[*] Adding Microsoft repository.${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-    exec_cmd dpkg -i packages-microsoft-prod.deb
-    exec_cmd rm packages-microsoft-prod.deb
-
-    # Install AvaloniaILSpy
-    print_msg "${yellowColour}[*] Install AvaloniaILSpy.${endColour}"
-    mkdir -p "${OPT_DIR}/AvaloniaILSpy"
-    cd "${OPT_DIR}/AvaloniaILSpy"
-    exec_cmd wget -q https://github.com/icsharpcode/AvaloniaILSpy/releases/download/v7.2-rc/Linux.x64.Release.zip
-    exec_cmd mv /home/$REAL_USER/Downloads/Linux.x64.Release.zip .
-    exec_cmd unzip Linux.x64.Release.zip
-    exec_cmd rm Linux.x64.Release.zip
-    exec_cmd unzip ILSpy-linux-x64-Release.zip
-    exec_cmd rm ILSpy-linux-x64-Release.zip 
-    # /opt/AvaloniaILSpy/artifacts/linux-x64/ILSpy
-
-    # Install RustScan
-    print_msg "${greenColour}${rev}[*] Install rustscan.${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd curl -sL https://github.com/bee-san/RustScan/releases/download/2.3.0/rustscan_2.3.0_amd64.deb -o rustscan_2.3.0_amd64.deb 
-    exec_cmd dpkg -i rustscan_2.3.0_amd64.deb
-
-    # Install Feroxbuster
-    print_msg "${greenColour}${rev}[*] Install Feroxbuster.${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd curl -sL https://github.com/epi052/feroxbuster/releases/download/v2.11.0/feroxbuster_amd64.deb.zip -o feroxbuster_amd64.deb.zip
-    exec_cmd 7z x feroxbuster_amd64.deb.zip
-    exec_cmd dpkg -i feroxbuster_2.11.0-1_amd64.deb
 
     # Install fastTCPscan
     print_msg "${greenColour}${rev}[*] Install fastTCPscan.${endColour}"
@@ -978,393 +554,7 @@ function core_package(){
     mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
-
-    # Install Curlie
-    print_msg "${greenColour}${rev}[*] Install curlie.${endColour}"
-    exec_cmd curl -sS https://webinstall.dev/curlie | bash
-
-    # Install Gef
-    print_msg "${greenColour}${rev}[*] Install Gef.${endColour}"
-    exec_cmd bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
-
 }
-
-function repositories(){
-
-    # Install incursore
-    print_msg "${yellowColour}Install incursore.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    exec_cmd git clone https://github.com/wirzka/incursore.git
-    ln -s $(pwd)/incursore/incursore.sh /usr/local/bin/incursore
-    #incursore.sh -h
-
-    : '
-    # Install WhatWaf
-    printf "%b\n" "${greenColour}${rev}Install WhatWaf.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/Ekultek/WhatWaf
-    cd WhatWaf
-    python3 setup.py install
-    #whatwaf -h
-
-    # Install bfac
-    printf "%b\n" "${yellowColour}Install bfac.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/mazen160/bfac
-    cd bfac
-    python3 setup.py install
-    #bfac -h
-
-    # Install Postman
-    printf "%b\n" "${yellowColour}Install Postman.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    wget -q --content-disposition https://dl.pstmn.io/download/latest/linux_64
-    tar -xzvf ./postman-linux-x64.tar.gz
-    cd Postman
-    ln -s /opt/Postman/Postman /usr/bin/
-    #Postman &>/dev/null & dsown
-
-    # Install git-hound
-    printf "%b\n" "${yellowColour}Install git-hound.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/tillson/git-hound
-    cd git-hound
-    go build .
-    go build -ldflags "-s -w" .
-    upx --brute git-hound .
-
-    # Install nmapAutomator
-    printf "%b\n" "${yellowColour}Install nmapAutomator.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/21y4d/nmapAutomator.git
-    ln -s $(pwd)/nmapAutomator/nmapAutomator.sh /usr/local/bin/
-    #nmapAutomator.sh -h
-
-    # Install Reconnoitre
-    printf "%b\n" "${yellowColour}Install Reconnoitre.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/codingo/Reconnoitre.git
-    cd Reconnoitre
-    python3 setup.py install
-    #reconnoitre --help
-
-    printf "%b\n" "${greenColour}${rev}Install DockerRegistryGrabber.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone git@github.com:Syzik/DockerRegistryGrabber.git  
-    cd DockerRegistryGrabber
-    python -m pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install bruteforce-luks.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/glv2/bruteforce-luks
-    cd bruteforce-luks
-    ./autogen.sh
-    ./configure
-    make
-    make check
-    make install
-
-    printf "%b\n" "${greenColour}${rev}Install dnsvalidator.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/vortexau/dnsvalidator  
-    cd dnsvalidator
-    python3 setup.py install
-
-    printf "%b\n" "${greenColour}${rev}Install firepwd.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/lclevy/firepwd
-    cd firepwd
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install Forbidden-Buster.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/Sn1r/Forbidden-Buster
-    cd Forbidden-Buster
-    pip3 install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install forbiddenpass.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/gotr00t0day/forbiddenpass
-    cd forbiddenpass
-    pip3 install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install bopscrk.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone --recurse-submodules https://github.com/r3nt0n/bopscrk 
-    cd bopscrk
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install jwtcat.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/AresS31/jwtcat  
-    cd jwtcat
-    git clone https://github.com/ticarpi/jwt_too
-
-    printf "%b\n" "${greenColour}${rev}Install nmap-parse-output.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/LorenzoTullini/InfluxDB-Exploit-CVE-2019-20933.git
-    cd InfluxDB-Exploit-CVE-2019-20933
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install nmap-parse-output.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/ernw/nmap-parse-output.git
-    cd nmap-parse-output
-    ./nmap-parse-output
-
-    printf "%b\n" "${greenColour}${rev}Install nullinux.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/m8sec/nullinux 
-    cd nullinux
-    sudo bash setup.sh
-
-    printf "%b\n" "${greenColour}${rev}Install NoMoreForbidden.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/akinerkisa/NoMoreForbidden 
-    cd NoMoreForbidden
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install ctfr.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/UnaPibaGeek/ctfr
-    cd ctfr
-    pip3 install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install reconftw.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/six2dez/reconftw
-    cd reconftw
-    ./install.sh
-    ./reconftw.sh -d target.com -r
-
-    printf "%b\n" "${greenColour}${rev}Install hcxtools.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/ZerBea/hcxtools
-    cd hcxtools
-    make -j $(nproc)
-    make install
-
-    printf "%b\n" "${greenColour}${rev}Install hcxdumptool.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/ZerBea/hcxdumptool
-    cd hcxdumptool
-    make -j $(nproc)
-    make install
-
-    printf "%b\n" "${greenColour}${rev}Install Gopherus.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/tarunkant/Gopherus
-    cd Gopherus
-    chmod +x install.sh
-    sudo ./install.sh
-
-    printf "%b\n" "${greenColour}${rev}Install remote-method-guesser.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/qtc-de/remote-method-guesser
-    cd remote-method-guesser
-    mvn package
-
-    printf "%b\n" "${greenColour}${rev}Install uDork.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/m3n0sd0n4ld/uDork
-    cd uDork
-    chmod +x uDork.sh
-
-    printf "%b\n" "${greenColour}${rev}Install Veil.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/Veil-Framework/Veil
-    cd Veil/
-    ./config/setup.sh --force --silent
-
-    printf "%b\n" "${greenColour}${rev}Install trufflesecurity.${endColour}"
-    cd "${OPT_DIR}"
-    git clone https://github.com/trufflesecurity/trufflehog.git
-    cd trufflehog; go install
-
-    printf "%b\n" "${greenColour}${rev}Install targetedKerberoast.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/ShutdownRepo/targetedKerberoast
-    cd targetedKerberoast
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install sucrack.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/hemp3l/sucrack
-    cd sucrack
-    ./configure
-    make
-    make install
-
-    printf "%b\n" "${greenColour}${rev}Install spose.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/aancw/spose
-    cd spose
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install SirepRAT.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/SafeBreach-Labs/SirepRAT.git
-    cd SirepRAT
-    pip install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install sippts.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/Pepelux/sippts.git
-    cd sippts
-    pip3 install .
-
-    printf "%b\n" "${greenColour}${rev}Install WPSeku.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/m4ll0k/WPSeku.git wpseku
-    cd wpseku
-    pip3 install -r requirements.txt
-    python3 wpseku.py
-
-    printf "%b\n" "${greenColour}${rev}Install wifi_db.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/r4ulcl/wifi_db
-    cd wifi_db
-    pip3 install -r requirements.txt 
-
-    printf "%b\n" "${greenColour}${rev}Install wifiphisher.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/wifiphisher/wifiphisher.git # Download the latest revision
-    cd wifiphisher 
-    python setup.py install # Install any dependencies
-
-    printf "%b\n" "${greenColour}${rev}Install wifite2.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/derv82/wifite2.git
-    cd wifite2
-    python setup.py install 
-
-    printf "%b\n" "${greenColour}${rev}Install windapsearch.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/ropnop/windapsearch.git
-    cd windapsearch
-    ./windapsearch.py
-
-    printf "%b\n" "${greenColour}${rev}Install RubeusToCcache.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone https://github.com/SolomonSklash/RubeusToCcache
-    cd RubeusToCcache
-    pip3 install -r requirements.txt
-
-    printf "%b\n" "${greenColour}${rev}Install WebAssembly.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    git clone --recursive https://github.com/WebAssembly/wabt
-    cd wabt
-    git submodule update --init  
-    mkdir build
-    cd build
-    cmake ..
-    cmake --build .
-
-    printf "%b\n" "${greenColour}${rev}Install + Tools.${endColour}"
-    cd "${OPT_DIR}" || exit 1
-    # Download Repositories in local
-    git clone https://github.com/ropnop/kerbrute /opt/kerbrute
-    git clone https://github.com/nicocha30/ligolo-ng.git /opt/ligolo-ng
-    git clone https://github.com/epinna/tplmap /opt/tplmap
-    git clone https://github.com/HarmJ0y/pylnker /opt/pylnker
-    git clone https://github.com/3mrgnc3/BigheadWebSvr /opt/BigheadWebSvr
-    git clone https://github.com/IOActive/jdwp-shellifier /opt/jdwp-shellifier
-    git clone https://github.com/danielbohannon/Invoke-Obfuscation /opt/Invoke-Obfuscation
-    git clone https://github.com/manulqwerty/Evil-WinRAR-Gen /opt/Evil-WinRAR-Gen
-    git clone https://github.com/ptoomey3/evilarc /opt/evilarc
-    git clone https://github.com/NotSoSecure/docker_fetch /opt/docker_fetch
-    git clone https://github.com/cnotin/SplunkWhisperer2 /opt/SplunkWhisperer2
-    git clone https://github.com/kozmic/laravel-poc-CVE-2018-15133 /opt/laravel-poc-CVE-2018-15133
-    git clone https://github.com/ambionics/phpggc /opt/phpggc
-    git clone https://github.com/kozmer/log4j-shell-poc /opt/log4j-shell-poc
-    git clone https://github.com/epinna/weevely3 /opt/weevely3
-    git clone https://github.com/ohoph/3bowla /opt/3bowla
-    git clone https://github.com/v1s1t0r1sh3r3/airgeddon /opt/airgeddon
-    git clone https://github.com/anbox/anbox /opt/anbox
-    git clone https://github.com/anbox/anbox-modules /opt/anbox-modules
-    git clone https://github.com/securecurebt5/BasicAuth-Brute /opt/BasicAuth-Brute
-    git clone https://github.com/kimci86/bkcrack /opt/bkcrack
-    git clone https://github.com/lobuhi/byp4xx /opt/byp4xx
-    git clone https://github.com/theevilbit/ciscot7.git /opt/ciscot7
-    git clone https://github.com/pentester-io/commonspeak /opt/commonspeak
-    git clone https://github.com/qtc-de/completion-helpers /opt/completion-helpers
-    git clone https://github.com/crackpkcs12/crackpkcs12 /opt/crackpkcs12
-    git clone https://github.com/jmg/crawley /opt/crawley
-    git clone https://github.com/Tib3rius/creddump7 /opt/creddump7
-    git clone https://github.com/Mebus/cupp /opt/cupp
-    git clone https://github.com/spipm/Depix /opt/Depix
-    git clone https://github.com/teambi0s/dfunc-bypasser /opt/dfunc-bypasser
-    git clone https://github.com/iagox86/dnscat2 /opt/dnscat2
-    git clone https://github.com/lukebaggett/dnscat2-powershell /opt/dnscat2-powershell
-    git clone https://github.com/dnSpy/dnSpy /opt/dnSpy
-    git clone https://github.com/s0lst1c3/eaphammer /opt/eaphammer
-    git clone https://github.com/cddmp/enum4linux-ng /opt/enum4linux-ng
-    git clone https://github.com/trickster0/Enyx /opt/Enyx
-    git clone https://github.com/shivsahni/FireBaseScanner /opt/FireBaseScanner
-    git clone https://github.com/unode/firefox_decrypt /opt/firefox_decrypt
-    git clone https://github.com/yonjar/fixgz /opt/fixgz
-    git clone https://github.com/carlospolop/fuzzhttpbypass /opt/fuzzhttpbypass
-    git clone https://github.com/zackelia/ghidra-dark /opt/ghidra-dark
-    git clone https://github.com/git-cola/git-cola /opt/git-cola
-    git clone https://github.com/lijiejie/GitHack /opt/GitHack
-    git clone https://github.com/micahvandeusen/gMSADumper /opt/gMSADumper
-    git clone https://github.com/GitMirar/hMailDatabasePasswordDecrypter /opt/hMailDatabasePasswordDecrypter
-    git clone https://github.com/sensepost/hostapd-mana /opt/hostapd-mana
-    git clone https://github.com/yasserjanah/HTTPAuthCracker /opt/HTTPAuthCracker
-    git clone https://github.com/attackdebris/kerberos_enum_userlists /opt/kerberos_enum_userlists
-    git clone https://github.com/chris408/known_hosts-hashcat /opt/known_hosts-hashcat
-    git clone https://github.com/dirkjanm/krbrelayx /opt/krbrelayx
-    git clone https://github.com/libyal/libesedb /opt/libesedb
-    git clone https://github.com/initstring/linkedin2username /opt/linkedin2username
-    git clone https://github.com/Plazmaz/LNKUp /opt/LNKUp
-    git clone https://github.com/wetw0rk/malicious-wordpress-plugin /opt/malicious-wordpress-plugin
-    git clone https://github.com/haseebT/mRemoteNG-Decrypt /opt/mRemoteNG-Decrypt
-    git clone https://github.com/NotMedic/NetNTLMtoSilverTicket /opt/NetNTLMtoSilverTicket
-    git clone https://github.com/Ridter/noPac.git /opt/noPac
-    git clone https://github.com/quentinhardy/odat /opt/odat
-    git clone https://github.com/Daniel10Barredo/OSCP_AuxReconTools /opt/OSCP_AuxReconTools
-    git clone https://github.com/flozz/p0wny-shell /opt/p0wny-shell
-    git clone https://github.com/mpgn/Padding-oracle-attack /opt/Padding-oracle-attack
-    git clone https://github.com/AlmondOffSec/PassTheCert /opt/PassTheCert
-    git clone https://github.com/topotam/PetitPotam /opt/PetitPotam
-    git clone https://github.com/scr34m/php-malware-scanner /opt/php-malware-scanner
-    git clone https://github.com/dirkjanm/PKINITtools /opt/PKINITtools
-    git clone https://github.com/aniqfakhrul/powerview.py /opt/powerview.py
-    git clone https://github.com/byt3bl33d3r/pth-toolkit /opt/pth-toolkit
-    git clone https://github.com/utoni/ptunnel-ng /opt/ptunnel-ng
-    git clone https://github.com/calebstewart/pwncat /opt/pwncat
-    git clone https://github.com/LucifielHack/pyinstxtractor /opt/pyinstxtractor
-    git clone https://github.com/3gstudent/pyKerbrute /opt/pyKerbrute
-    git clone https://github.com/p0dalirius/pyLAPS /opt/pyLAPS
-    git clone https://github.com/JPaulMora/Pyrit /opt/Pyrit
-    git clone https://github.com/WithSecureLabs/python-exe-unpacker /opt/python-exe-unpacker
-    git clone https://github.com/ShutdownRepo/pywhisker /opt/pywhisker
-    git clone https://github.com/cloudflare/quiche /opt/quiche
-    git clone https://github.com/n0b0dyCN/RedisModules-ExecuteCommand /opt/RedisModules-ExecuteCommand
-    git clone https://github.com/Ridter/redis-rce /opt/redis-rce
-    git clone https://github.com/n0b0dyCN/redis-rogue-server /opt/redis-rogue-server
-    git clone https://github.com/allyshka/Rogue-MySql-Server /opt/Rogue-MySql-Server
-    git clone https://github.com/sensepost/reGeorg /opt/reGeorg
-    git clone https://github.com/klsecservices/rpivot /opt/rpivot
-    git clone https://github.com/silentsignal/rsa_sign2n /opt/rsa_sign2n
-    git clone https://github.com/Flangvik/SharpCollection /opt/SharpCollection
-    git clone https://github.com/SECFORCE/SNMP-Brute /opt/SNMP-Brute
-    git clone https://github.com/nccgroup/SocksOverRDP /opt/SocksOverRDP
-    git clone https://github.com/byt3bl33d3r/SprayingToolkit /opt/SprayingToolkit
-    git clone https://github.com/urbanadventurer/username-anarchy.git /opt/username-anarchy
-    git clone https://github.com/decalage2/ViperMonkey /opt/ViperMonkey
-    git clone https://github.com/mkubecek/vmware-host-modules /opt/vmware-host-modules
-    git clone https://github.com/blunderbuss-wctf/wacker /opt/wacker
-    git clone https://github.com/Hackndo/WebclientServiceScanner /opt/WebclientServiceScanner
-    git clone https://github.com/tennc/webshell /opt/webshell
-    git clone https://github.com/bitsadmin/wesng /opt/wesng
-    git clone https://github.com/AonCyberLabs/Windows-Exploit-Suggester /opt/Windows-Exploit-Suggester
-    git clone https://github.com/mansoorr123/wp-file-manager-CVE-2020-25213 /opt/wp-file-manager-CVE-2020-25213
-    git clone https://github.com/artsploit/yaml-payload /opt/yaml-payload
-    git clone https://github.com/hoto/jenkins-credentials-decryptor /opt/jenkins-credentials-decryptor
-    : '
-}
-
 
 # Instalar Entorno de LaTeX
 function latex_env(){
@@ -1441,7 +631,43 @@ function clean_bspwm() {
     [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
 
     if hash pacman 2>/dev/null; then
+        
+        # Instala paru (AUR helper)
+        print_msg "${greenColour}${rev}[*] Install paru.${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
+        cd "${INSTALL_DIR}/paru-bin"
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
+        
+        # Instala blackarch repositories
+        print_msg "${greenColour}${rev}[*] Install blackarch.${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd sudo -u "${REAL_USER}" curl -O https://blackarch.org/strap.sh
+        chmod +x strap.sh
+        exec_cmd ./strap.sh
 
+        # Instala yay (otro AUR helper)
+        print_msg "${greenColour}${rev}[*] Install aur.${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
+        cd "${INSTALL_DIR}/yay"
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
+
+        # Instala paquetes adicionales desde AUR con yay
+        exec_cmd sudo -u "${REAL_USER}" -- yay -S eww-git xqp tdrop-git rofi-greenclip neofetch xwinwrap-0.9-bin simple-mtpfs --noconfirm
+        exec_cmd pacman -Syu --overwrite '*' --noconfirm
+
+        # Instala snap repositories
+        print_msg "${greenColour}${rev}[*] Install snap.${endColour}"
+        cd "${INSTALL_DIR}" || exit 1 
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/snapd.git       
+        cd "${INSTALL_DIR}/snapd"
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
+        exec_cmd systemctl enable --now snapd.socket
+        exec_cmd systemctl restart snapd.service
+        print_msg "%b\n"  "${greenColour}${rev}Install Tools snap${endColour}"
+        snap install node --classic
+        
         # Limpiar caché de pacman
         exec_cmd pacman -Scc --noconfirm
 
@@ -1503,8 +729,7 @@ function clean_bspwm() {
 function shutdown_session(){
     # Mensaje de aviso
     print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
-
-    sudo -u "${REAL_USER}" echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | crontab -
+    echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
     # Esperar antes de reiniciar
     sleep 10
     # Reiniciar sistema
@@ -1514,17 +739,13 @@ function shutdown_session(){
 # Inicializar contador de parámetros
 declare -i parameter_counter=0
 Mode=""
-core_tools=false
-repositories=false
 latex=false
 spotify=false
 
 OPTERR=0
-while getopts "d:crlsmh" arg; do
+while getopts "d:lsmh" arg; do
     case "$arg" in
         d) Mode="${OPTARG}"; let parameter_counter+=1 ;;
-        c) core_tools=true ;;
-        r) repositories=true ;;
         l) latex=true ;;
         s) spotify=true ;;
         m) MUTE_MODE=true ;;
@@ -1562,17 +783,6 @@ if [[ "$Mode" == "debian" ]]; then
     check_os
     bspwm_enviroment 
 
-    # Instalar tools si se solicitó
-    if [[ "$core_tools" == true ]]; then
-        update_debian
-        core_package
-    fi
-
-    # Instalar Repos si se solicitó
-    if [[ "$repositories" == true ]]; then
-        repositories
-    fi
-
     # Instalar Latex si se solicitó
     if [[ "$latex" == true ]]; then
         latex_env
@@ -1591,17 +801,6 @@ elif [[ "$Mode" == "archlinux" ]]; then
     check_sudo
     check_os
     bspwm_enviroment 
-
-    # Instalar tools si se solicitó
-    if [[ "$core_tools" == true ]]; then
-        update_debian
-        core_package
-    fi
-
-    # Instalar Repos si se solicitó
-    if [[ "$repositories" == true ]]; then
-        repositories
-    fi
 
     # Instalar Latex si se solicitó
     if [[ "$latex" == true ]]; then
