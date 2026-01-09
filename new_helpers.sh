@@ -142,7 +142,8 @@ check_sudo() {
        print_msg "\n${greenColour}${grisBg}${bold}[*] Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
        
        # Mantener sudo activo durante todo el script 
-       sudo -v ( while true; do sudo -v; sleep 60; done ) & 
+       sudo -v 
+       ( while true; do sudo -v; sleep 60; done ) & 
        SUDO_KEEPALIVE_PID=$!
         
     else
