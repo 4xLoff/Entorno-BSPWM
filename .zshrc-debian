@@ -145,14 +145,14 @@ function rmk(){
 }
 
 function settarget(){
-  echo $1 > /tmp/target
-  echo $2 > /tmp/name
+  echo $1 > /tmp/name
+  echo $2 > /tmp/target
 }
 
 # Define the cleartarget function
 function cleartarget(){
-  sh -c ': > /tmp/target'
   sh -c ': > /tmp/name'
+  sh -c ': > /tmp/target'
 }
 
 # Execute the cleartarget function only if it has not been executed before
