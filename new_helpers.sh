@@ -721,7 +721,6 @@ function clean_bspwm() {
         exec_cmd systemctl enable vmtoolsd 2>/dev/null
         exec_cmd systemctl enable gdm.service 2>/dev/null 
         exec_cmd systemctl start gdm.service 2>/dev/null
-        exec_cmd systemctl enable --now cronie.service 2>/dev/null 
 
     elif hash apt 2>/dev/null; then
 
@@ -767,21 +766,22 @@ function clean_bspwm() {
 function shutdown_session(){
     print_msg "\n\t${cianColour}${rev}[*] We are closing the session to apply the new configuration, be sure to select the BSPWM.${endColour}" 
     if  hash pacman 2>/dev/null; then
-    # Arch Linux - usar systemd
+        # <<-EOF permite indentar el contenido del here-document usando TABs reales, ya que Bash los elimina automáticamente, evitando errores por indentación, mientras que el delimitador `EOF` final siempre debe ir sin espacios.
         cat > /etc/systemd/system/clear-tmp-files.service << EOF
-    [Unit]
-    Description=Clear tmp files on boot
+[Unit]
+Description=Clear tmp files on boot
 
-    [Service]
-    Type=oneshot
-    ExecStart=/bin/sh -c ': > /tmp/target; : > /tmp/name'
-    User=${REAL_USER}
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c ': > /tmp/target; : > /tmp/name'
+User=${REAL_USER}
 
-    [Install]
-    WantedBy=multi-user.target
-    EOF
+[Install]
+WantedBy=multi-user.target
+EOF
     
-    systemctl enable clear-tmp-files.service
+        exec_cmd systemctl enable clear-tmp-files.service
+        exec_cmd systemctl enable --now cronie.service 2>/dev/null 
     
     elif hash apt 2>/dev/null; then
         # Debian/Ubuntu - usar crontab
