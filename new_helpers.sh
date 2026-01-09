@@ -140,11 +140,6 @@ check_sudo() {
        [ "${REAL_USER}" != "root" ]; then
        
        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
-       
-       # Mantener sudo activo durante todo el script 
-       sudo -v 
-       ( while true; do sudo -v; sleep 60; done ) & 
-       SUDO_KEEPALIVE_PID=$!
         
     else
         print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution${endColour}"
@@ -162,11 +157,11 @@ ctrl_c() {
     if (( now - last < 1 )); then
         print_msg "\n${redColour}${rev}[x] Exiting... ${endColour}"
         
-        # Matar proceso keep-alive de sudo 
-        [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
-
         # Limpia el directorio de instalación antes d.e salir
-        [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
+        [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}" 2>/dev/null
+        
+        rm -f /etc/sudoers.d/axel-aur
+        
         set +e
         tput cnorm
         exit 1
@@ -507,7 +502,7 @@ function bspwm_enviroment() {
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
-
+    stop_spinner
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
         # Leer respuesta del usuario
@@ -516,7 +511,7 @@ function bspwm_enviroment() {
             # Opción sí
             y|yes|yey)
                 # Mensaje de instalación
-                print_msg "${greenColour}${rev} Set s4vitar's themes. ${endColour}"
+                print_msg "${greenColour}${rev}[*] Set s4vitar's themes. ${endColour}"
                 # Cambiar script de lanzamiento de polybar en bspwm
                 exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
                 break
@@ -537,6 +532,7 @@ function bspwm_enviroment() {
         esac
     done
 
+	 start_spinner
     # Permisos de ejecución para launcher
     chmod +x "${USER_HOME}/.config/polybar/launch.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
@@ -664,13 +660,15 @@ function clean_bspwm() {
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
     if hash pacman 2>/dev/null; then
+        echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur
+        chmod 440 /etc/sudoers.d/axel-aur
         
         # Instala paru (AUR)
         print_msg "${greenColour}${rev} Install Paru. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
-        exec_cmd runuser -u "${REAL_USER}" -- git clone https://aur.archlinux.org/paru-bin.git
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
         cd "${INSTALL_DIR}/paru-bin"
-        exec_cmd runuser -u "${REAL_USER}" -- makepkg -si --noconfirm
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala blackarch repositories (ROOT)
         print_msg "${greenColour}${rev} Install Blackarch. ${endColour}"
@@ -682,12 +680,13 @@ function clean_bspwm() {
         # Instala yay (otro AUR)
         print_msg "${greenColour}${rev} Install yay. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
-        exec_cmd runuser -u "${REAL_USER}" -- git clone https://aur.archlinux.org/yay.git
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
         cd "${INSTALL_DIR}/yay"
-        exec_cmd runuser -u "${REAL_USER}" -- makepkg -si --noconfirm
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala paquetes adicionales desde AUR con yay
-        exec_cmd runuser -u "${REAL_USER}" -- yay -S  rofi-greenclip neofetch --noconfirm
+        exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch --noconfirm
+        rm -f /etc/sudoers.d/axel-aur
 
         # Actualiza sistema
         exec_cmd pacman -Syu --overwrite '*' --noconfirm
@@ -754,41 +753,19 @@ function clean_bspwm() {
 function shutdown_session(){
     print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
     
-    # Matar proceso keep-alive de sudo 
-    [[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
-    
     if hash pacman 2>/dev/null; then
-        # <<-EOF permite indentar el contenido del here-document usando TABs reales, ya que Bash los elimina automáticamente, evitando errores por indentación, mientras que el delimitador `EOF` final siempre debe ir sin espacios.
-        cat > /etc/systemd/system/clear-tmp-files.service << EOF
-[Unit]
-Description=Clear tmp files on boot
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh -c ': > /tmp/name'
-ExecStart=/bin/sh -c ': > /tmp/target'
-User=${REAL_USER}
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-		  chown "${REAL_USER}:${REAL_USER}" /etc/systemd/system/clear-tmp-files.service
-        exec_cmd systemctl enable clear-tmp-files.service
         exec_cmd systemctl enable --now cronie.service 2>/dev/null 
-    
-    elif hash apt 2>/dev/null; then
-        # Debian/Ubuntu - usar crontab
-        echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
     fi
+    
+    # Debian/ArchLinux - usar crontab
+    echo "@reboot /bin/sh -c ': > /tmp/target; : > /tmp/name'" | sudo -u "${REAL_USER}" crontab -
     
     # Esperar antes de reiniciar
     sleep 5
     
-    # Eliminar directorio de instalación si existe
-    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}"
-    
     stop_spinner
+    # Eliminar directorio de instalación si existe
+    [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}" 2>/dev/null
     # Reiniciar sistema
     exec_cmd systemctl reboot
 }
@@ -878,7 +855,5 @@ else
     helpPanel
 fi
 
-# Limpiar keep-alive si no se reinició 
-[[ -n "$SUDO_KEEPALIVE_PID" ]] && kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
 tput cnorm
 exit 0 
