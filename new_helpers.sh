@@ -660,7 +660,7 @@ function clean_bspwm() {
     sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
     if hash pacman 2>/dev/null; then
-        echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur
+        echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
         chmod 440 /etc/sudoers.d/axel-aur
         
         # Instala paru (AUR)
