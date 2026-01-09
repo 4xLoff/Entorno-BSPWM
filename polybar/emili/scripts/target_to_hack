@@ -11,7 +11,7 @@ ip_address=$(/bin/cat /tmp/target | awk '{print $1}')
  
 _polybar(){
 if [ $ip_address ] && [ $machine_name ]; then
-    echo "%{F#e51d0b}󰯐 %{F#ffffff}$machine_name%{u-} - $ip_address"
+    echo "%{F#e51d0b}󰯐 %{F#ffffff}  $machine_name%{u-} - $ip_address"
 else
     echo "%{F#e51d0b}󰓾 %{u-}%{F#ffffff} No target"
 fi
