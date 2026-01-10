@@ -229,7 +229,7 @@ function check_os() {
         libxcb-randr0-dev libxcb-icccm4-dev libxcb-keysyms1-dev 
         libxcb-xinerama0-dev libxcb-xtest0-dev libxcb-shape0-dev 
         xcb-proto zsh zsh-syntax-highlighting make 
-        cmake-data pkg-config python3-sphinx 
+        cmake-data pkg-config python3-sphinx python3-setuptools
         python3-xcbgen libxcb-sync-dev libuv1-dev 
         libcairo2-dev libxcb1-dev libxcb-composite0-dev 
         libxcb-cursor-dev libxcb-damage0-dev libxcb-glx0-dev
@@ -295,7 +295,10 @@ function check_os() {
         
         # Pantalla completa
         exec_cmd print_msg "${greenColour}${rev}[*] Pantalla completa ${endColour}"
-        modprobe -a vboxguest vboxsf vboxvideo
+        exec_cmd modprobe -a vboxguest vboxsf vboxvideo
+        # 3. Habilitar servicio sudo 
+        exec_cmd systemctl enable vboxservice.service 
+        exec_cmd systemctl start vboxservice.service
         
         echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
         chmod 440 /etc/sudoers.d/axel-aur
@@ -326,7 +329,7 @@ function check_os() {
         # Array de paquetes necesarios para BSPWM en Arch
         packages_bspwm_arch=(
         base-devel curl wget cmake dpkg net-tools rsync
-        plocate gnome meson ninja bspwm sxhkd polybar
+        plocate gnome meson ninja bspwm sxhkd polybar kmod
         make zlib pcre dbus libconfig libev libxpresent 
         pkgconf uthash libxcb xcb-proto xcb-util xcb-util-wm 
         xcb-util-keysyms cronie libgl libxcursor libxext 
@@ -339,7 +342,7 @@ function check_os() {
         xorg-xprop xorg-xrandr xorg-xsetroot xorg-xwininfo
         xf86-video-intel xf86-video-vmware open-vm-tools
         xsettingsd gvfs-mtp simple-mtpfs virtualbox-guest-utils
-        mpd mpc ncmpcpp mpv htop eza p7zip bc bd)
+        mpd mpc ncmpcpp mpv htop eza p7zip bc bd python-setuptools)
 
         # Instala paquetes con pacman
         for package in "${packages_bspwm_arch[@]}"; do
@@ -660,10 +663,14 @@ function spotify_env(){
 
     # Copiar configuración personalizada de módulos
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/config.ini" "${USER_HOME}/.config/polybar/config.ini.old2"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/config.ini.old" "${USER_HOME}/.config/polybar/config.ini"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/forest/config.ini" "${USER_HOME}/.config/polybar/forest/config.ini.old2"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/forest/config.ini.old" "${USER_HOME}/.config/polybar/forest/config.ini"
     # Mensaje de instalación
     print_msg "${greenColour}${rev} Install Spotify. ${endColour}"
+    
+    # Dar permisos de ejecución a scripts forest
+    chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+    chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
 
     if hash pacman 2>/dev/null; then
 
@@ -673,10 +680,6 @@ function spotify_env(){
         exec_cmd systemctl is-enabled --quiet mpd.service
 
     elif hash apt 2>/dev/null; then
-
-        # Dar permisos de ejecución a scripts forest
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
 
         # Instalar playerctl en Debian
         exec_cmd apt-get install playerctl -y
