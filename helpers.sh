@@ -174,6 +174,15 @@ ctrl_c() {
 # Captura la señal SIGINT (CTRL+C)
 trap ctrl_c SIGINT
 
+check_disk_space() { 
+    local required_gb=60 
+    local available_gb=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//') 
+    if (( available_gb < required_gb )); then 
+        print_msg "${redColour}[x] Not enough disk space. Required: ${required_gb}GB${endColour}" 
+        helpPanel
+    fi 
+}
+
 # Detecta el sistema operativo e instala paquetes según la distribución
 function check_os() {
 
@@ -412,9 +421,10 @@ function bspwm_enviroment() {
     # Copia wallpapers al directorio Pictures del usuario
     print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
-    sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/Pictures"
-    cp "${INSTALL_DIR}"/Entorno-BSPWM/*.png "${USER_HOME}/Pictures" 
-    cp "${INSTALL_DIR}"/Entorno-BSPWM/*.gif "${USER_HOME}/Pictures"
+    
+    sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
+    cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
+    cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
 
     # Instala plugin sudo para zsh
     print_msg "${greenColour}${rev} Install plugin sudo. ${endColour}"
@@ -505,8 +515,8 @@ function bspwm_enviroment() {
     stop_spinner
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
-        # Leer respuesta del usuario
-        read -rp "$(printf "%b" "${orangeColour}[*] Set s4vitar's BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ")" entorno 
+        # Leer respuesta del usuario  ${greenColour}${rev} Install fzf. ${endColour}"
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${cianColour}Emili's${endColour} ${orangeColour}BSPWM environment${endColour} ")" entorno
         case "${entorno,,}" in 
             # Opción sí
             y|yes|yey)
@@ -519,6 +529,7 @@ function bspwm_enviroment() {
 
             # Opción no o enter
             ""|n|no|nay)
+                print_msg "${greenColour}${rev}[*] Set Emili's themes. ${endColour}"
                 # Copiar configuración de polybar forest
                 exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
                 break
@@ -617,6 +628,8 @@ function spotify_env(){
 
     # Eliminar configuración previa de módulos de usuario
     exec_cmd rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
+    
+    exec_cmd sudo -u "${REAL_USER}" sed -i -E 's|~/.config/polybar/launch(1|4)\.sh|~/.config/polybar/launch.sh --forest|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 
     # Copiar configuración personalizada de módulos
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
@@ -698,7 +711,8 @@ function clean_bspwm() {
         exec_cmd pacman -Syu --noconfirm
 
         # Eliminar dependencias huérfanas
-        exec_cmd pacman -Rns $(pacman -Qdtq) --noconfirm 2>/dev/null 
+        orphans=$(pacman -Qdtq 2>/dev/null) 
+        [[ -n "$orphans" ]] && exec_cmd pacman -Rns $orphans --noconfirm 
 
         # Mensaje de habilitación de servicios
         print_msg "${greenColour}${rev} Enabling services. ${endColour}"
@@ -813,6 +827,7 @@ fi
 # Ejecución para Debian
 if [[ "$Mode" == "debian" ]]; then
     check_sudo
+    check_disk_space
     check_os
     bspwm_enviroment 
 
@@ -832,6 +847,7 @@ if [[ "$Mode" == "debian" ]]; then
 # Ejecución para Arch Linux
 elif [[ "$Mode" == "archlinux" ]]; then
     check_sudo
+    check_disk_space
     check_os
     bspwm_enviroment 
 
