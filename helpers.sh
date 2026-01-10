@@ -292,6 +292,35 @@ function check_os() {
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
         print_msg "\n${blueColour}${grisBg}${bold} The system is Arch Linux. ${endColour}"
+        
+        # Pantalla completa
+        exec_cmd print_msg "${greenColour}${rev}[*] Pantalla completa ${endColour}"
+        modprobe -a vboxguest vboxsf vboxvideo
+        
+        echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
+        chmod 440 /etc/sudoers.d/axel-aur
+        
+        # Instala paru (AUR)
+        print_msg "${greenColour}${rev} Install Paru. ${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
+        cd "${INSTALL_DIR}/paru-bin"
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
+
+        # Instala blackarch repositories (ROOT)
+        print_msg "${greenColour}${rev} Install Blackarch. ${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd curl -O https://blackarch.org/strap.sh
+        chmod +x strap.sh
+        exec_cmd ./strap.sh
+
+        # Instala yay (otro AUR)
+        print_msg "${greenColour}${rev} Install yay. ${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
+        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
+        cd "${INSTALL_DIR}/yay"
+        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
+        
         print_msg "\n${yellowColour}${rev} Installing only the bspwm environment for Arch Linux. ${endColour}\n"
 
         # Array de paquetes necesarios para BSPWM en Arch
@@ -309,7 +338,7 @@ function check_os() {
         xorg xorg-server xorg-xinit xorg-xdpyinfo xorg-xkill 
         xorg-xprop xorg-xrandr xorg-xsetroot xorg-xwininfo
         xf86-video-intel xf86-video-vmware open-vm-tools
-        xsettingsd gvfs-mtp simple-mtpfs
+        xsettingsd gvfs-mtp simple-mtpfs virtualbox-guest-utils
         mpd mpc ncmpcpp mpv htop eza p7zip bc bd)
 
         # Instala paquetes con pacman
@@ -671,29 +700,6 @@ function clean_bspwm() {
     chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
     if hash pacman 2>/dev/null; then
-        echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
-        chmod 440 /etc/sudoers.d/axel-aur
-        
-        # Instala paru (AUR)
-        print_msg "${greenColour}${rev} Install Paru. ${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/paru-bin.git
-        cd "${INSTALL_DIR}/paru-bin"
-        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
-
-        # Instala blackarch repositories (ROOT)
-        print_msg "${greenColour}${rev} Install Blackarch. ${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd curl -O https://blackarch.org/strap.sh
-        chmod +x strap.sh
-        exec_cmd ./strap.sh
-
-        # Instala yay (otro AUR)
-        print_msg "${greenColour}${rev} Install yay. ${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-        exec_cmd sudo -u "${REAL_USER}" git clone https://aur.archlinux.org/yay.git
-        cd "${INSTALL_DIR}/yay"
-        exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala paquetes adicionales desde AUR con yay
         exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch spotify --noconfirm
