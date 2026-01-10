@@ -220,7 +220,7 @@ function check_os() {
         libxcb-randr0-dev libxcb-icccm4-dev libxcb-keysyms1-dev 
         libxcb-xinerama0-dev libxcb-xtest0-dev libxcb-shape0-dev 
         xcb-proto zsh zsh-syntax-highlighting make 
-        cmake-data pkg-config python-sphinx python3-sphinx 
+        cmake-data pkg-config python3-sphinx 
         python3-xcbgen libxcb-sync-dev libuv1-dev 
         libcairo2-dev libxcb1-dev libxcb-composite0-dev 
         libxcb-cursor-dev libxcb-damage0-dev libxcb-glx0-dev
