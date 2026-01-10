@@ -325,7 +325,7 @@ function check_os() {
         done
 
         # Clona y compila bspwm y sxhkd desde source
-        print_msg "${greenColour}${rev} Install bspwm and sxhkd. ${endColour}"
+        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
@@ -628,12 +628,11 @@ function spotify_env(){
 
     # Eliminar configuración previa de módulos de usuario
     exec_cmd rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    
-    exec_cmd sudo -u "${REAL_USER}" sed -i -E 's|~/.config/polybar/launch(1|4)\.sh|~/.config/polybar/launch.sh --forest|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 
     # Copiar configuración personalizada de módulos
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.old" "${USER_HOME}/.config/polybar/config.ini"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/config.ini" "${USER_HOME}/.config/polybar/config.ini.old2"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/config.ini.old" "${USER_HOME}/.config/polybar/config.ini"
     # Mensaje de instalación
     print_msg "${greenColour}${rev} Install Spotify. ${endColour}"
 
@@ -656,8 +655,8 @@ function spotify_env(){
 
         # Agregar repositorio de Spotify
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list &>/dev/null
+        exec_cmd snap install spotify
         exec_cmd apt-get update
-        exec_cmd apt-get install spotify-client -y
     else
         print_msg "\n${redColour}${rev}The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
