@@ -35,11 +35,25 @@
 
 # --- Wallpaper ---
 # Opción 1: Video wallpaper (desactivado)
-#/usr/local/bin/back4.sh 0.010 ~/Pictures/rick.gif &
+#/usr/local/bin/back4.sh 0.010 ~/.config/bspwm/Pictures/rick.gif &
 
 # Opción 2: Wallpaper estático (activo)
-/usr/bin/feh --bg-fill ~/Pictures/s4vitar.png
+/usr/bin/feh --bg-fill ~/.config/bspwm/Pictures/s4vitar.png
 
+# ============================================
+# POLYBAR THEMES DISPONIBLES
+# ============================================
+# Uso: launch.sh --theme
+#
+# Temas disponibles:
+#   --blocks        --colorblocks    --cuts       --docky
+#   --forest        --grayblocks     --hack       --material
+#   --panels        --pwidgets       --shades     --shapes
+#
+# Configuración actual:
+#   launch1.sh  -> Tema emili
+#   launch4.sh  -> Tema s4vitar 
+# ============================================
 # --- Polybar ---
 # Lanzar la barra de estado
 ~/.config/polybar/launch.sh --forest
@@ -57,17 +71,4 @@
 # Fix para aplicaciones Java (como Burp Suite)
 /usr/bin/wmname LG3D &
 
-# ============================================
-# POLYBAR THEMES DISPONIBLES
-# ============================================
-# Uso: launch.sh --theme
-#
-# Temas disponibles:
-#   --blocks        --colorblocks    --cuts       --docky
-#   --forest        --grayblocks     --hack       --material
-#   --panels        --pwidgets       --shades     --shapes
-#
-# Configuración actual:
-#   launch1.sh  -> Tema emili
-#   launch4.sh  -> Tema s4vitar (desactivado)
-# ============================================
+
