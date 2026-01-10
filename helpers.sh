@@ -136,10 +136,10 @@ check_sudo() {
 
     # Debe ser root (UID 0), proceso padre debe ser sudo, y usuario real no debe ser root
     if [ "${CURRENT_UID}" -eq 0 ] && \
-       [ "${PARENT_PROCESS}" = "sudo" ] && \
-       [ "${REAL_USER}" != "root" ]; then
+        [ "${PARENT_PROCESS}" = "sudo" ] && \
+        [ "${REAL_USER}" != "root" ]; then
        
-       print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
+        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
         
     else
         print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution${endColour}"
@@ -520,7 +520,7 @@ function bspwm_enviroment() {
             # Opción no o enter
             ""|n|no|nay)
                 # Copiar configuración de polybar forest
-                exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.spotyfy" "${USER_HOME}/.config/polybar/config.ini"
+                exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
                 break
                 ;;
 
@@ -619,8 +619,8 @@ function spotify_env(){
     exec_cmd rm -f "${USER_HOME}/.config/polybar/forest/user_modules.ini"
 
     # Copiar configuración personalizada de módulos
-    sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
+    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.old" "${USER_HOME}/.config/polybar/config.ini"
     # Mensaje de instalación
     print_msg "${greenColour}${rev} Install Spotify. ${endColour}"
 
@@ -628,15 +628,14 @@ function spotify_env(){
 
         # Instalar playerctl
         exec_cmd pacman -S playerctl --noconfirm
-        exec_cmd snap install spotify
         exec_cmd systemctl --user enable --now mpd.service
         exec_cmd systemctl is-enabled --quiet mpd.service
 
     elif hash apt 2>/dev/null; then
 
         # Dar permisos de ejecución a scripts forest
-        exec_cmd chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
-        exec_cmd chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/scroll_spotify_status.sh"
+        chmod +x "${USER_HOME}/.config/polybar/forest/scripts/get_spotify_status.sh"
 
         # Instalar playerctl en Debian
         exec_cmd apt-get install playerctl -y
@@ -657,7 +656,7 @@ function clean_bspwm() {
     # Mensaje de limpieza
     print_msg "${greenColour}${rev} Cleaning everything, have patience. ${endColour}"
     # Corregir permisos de función de bspc para sudo su
-    sudo chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
+    chown root:root /usr/local/share/zsh/site-functions/_bspc 2>/dev/null 
 
     if hash pacman 2>/dev/null; then
         echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
@@ -685,7 +684,7 @@ function clean_bspwm() {
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
 
         # Instala paquetes adicionales desde AUR con yay
-        exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch --noconfirm
+        exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch spotify --noconfirm
         rm -f /etc/sudoers.d/axel-aur
 
         # Actualiza sistema
@@ -710,7 +709,7 @@ function clean_bspwm() {
         # Habilitar servicios necesarios
         exec_cmd systemctl enable vmtoolsd 2>/dev/null
         exec_cmd systemctl enable gdm.service 2>/dev/null 
-        exec_cmd systemctl start gdm.service 2>/dev/null
+        # exec_cmd systemctl start gdm.service 2>/dev/null # NO INICIAR GDM AQUÍ - se iniciará automáticamente al reiniciar
 
     elif hash apt 2>/dev/null; then
 
