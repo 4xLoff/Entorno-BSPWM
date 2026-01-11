@@ -69,7 +69,6 @@ fi
 APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confnew")
 
 # Función wrapper para ejecutar comandos respetando el modo mute
-# Si MUTE_MODE es true, redirige todo a /dev/null
 exec_cmd() {
     if [[ "$MUTE_MODE" == true ]]; then
         "$@" &>/dev/null
@@ -117,7 +116,6 @@ helpPanel() {
     print_msg "\t\t${magentaColour}${grisBg}${bold}debian${endColour}\t\t\t${yellowColour}${rev}Distribution Debian nesesary =< 60 gb.${endColour}"
     print_msg "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary =< 60 gb.${endColour}"
     print_msg "\t${blueColour}${rev}Opcionales:${endColour}"
-    print_msg "\t\t${magentaColour}${rev}[-l]${endColour}\t\t\t${greenColour}${rev}LaTeX environment (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${cianColour}${rev}[-s]${endColour}\t\t\t${greenColour}${rev}Spotify (Only for more than 16 gb RAM)${endColour}"
     print_msg "\t\t${magentaColour}${rev}[-m]${endColour}\t\t\t${greenColour}${rev}Mode silence (mute)${endColour}"
     print_msg "\t${redColour}${rev}[-h] Show this help panel.${endColour}"
@@ -157,10 +155,7 @@ ctrl_c() {
         
         # Limpia el directorio de instalación antes d.e salir
         [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}" 2>/dev/null
-        
         rm -f /etc/sudoers.d/axel-aur
-        
-        set +e
         tput cnorm
         exit 1
     fi
@@ -207,6 +202,25 @@ function check_os() {
         done
     fi
 
+    # Al principio del script (después de check_sudo)
+    while true; do
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment ?${endColour} ")" entorno
+        
+        case "${entorno,,}" in 
+            y|yes|yey)
+                THEME_CHOICE="s4vitar"
+                break
+                ;;
+            ""|n|no|nay)
+                THEME_CHOICE="emili"
+                break
+                ;;
+            *)
+                print_msg "\n${redColour}${rev}[x] Invalid option. Please try again.${endColour}\n"
+                ;;
+        esac
+    done
+
     # Instalación para sistemas basados en Debian
     start_spinner
     if hash apt 2>/dev/null; then
@@ -216,6 +230,8 @@ function check_os() {
         # Remueve versiones conflictivas de codium y neovim
         exec_cmd apt-get remove --purge codium -y
         exec_cmd apt-get remove --purge neovim -y
+        exec_cmd rm /usr/share/applications/nvim.desktop
+        exec_cmd rm /usr/share/applications/vim.desktop
         exec_cmd apt update -y
 
         # Array de paquetes necesarios para BSPWM en Debian
@@ -256,7 +272,7 @@ function check_os() {
             fi
         done 
 
-        print_msg "${greenColour}${rev} Install bspwm and sxhkd. ${endColour}"
+        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
 
         # Clona los repositorios de bspwm y sxhkd
@@ -545,36 +561,14 @@ function bspwm_enviroment() {
     
     stop_spinner
     
-    # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
-    while true; do
-        # Leer respuesta del usuario  ${greenColour}${rev} Install fzf. ${endColour}"
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${readColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
-        case "${entorno,,}" in 
-        
-            # Opción sí
-            y|yes|yey)
-                # Mensaje de instalación
-                print_msg "${greenColour}${rev}[*] Set s4vitar's themes. ${endColour}"
-                # Cambiar script de lanzamiento de polybar en bspwm
-                exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-                break
-                ;;
-
-            # Opción no o enter
-            ""|n|no|nay)
-                print_msg "${greenColour}${rev}[*] Set Emili's themes. ${endColour}"
-                # Copiar configuración de polybar forest
-                exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-                break
-                ;;
-
-              # Opción inválida
-            *)
-                print_msg "\n${redColour}${rev}[x] That option is invalid please enter a valid option. ${endColour}\n" 
-                continue
-                ;;
-        esac
-    done
+	 # Aplicar tema según elección
+	 if [[ "$THEME_CHOICE" == "s4vitar" ]]; then
+	     print_msg "${greenColour}${rev}[*] Set s4vitar's themes.${endColour}"
+	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+	 else
+	     print_msg "${greenColour}${rev}[*] Set Emili's themes.${endColour}"
+	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+	 fi
 
 	 start_spinner
     # Permisos de ejecución para launcher
@@ -631,23 +625,6 @@ function bspwm_enviroment() {
     mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
-}
-
-# Instalar Entorno de LaTeX
-function latex_env(){
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v1.10.3/obsidian_1.10.3_amd64.deb
-    exec_cmd dpkg -i obsidian_1.10.3_amd64.deb
-    print_msg "${greenColour}${rev} The latex environment will be installed, this will take more than 30 minutes approximately. ${endColour}"
-        
-    if hash pacman 2>/dev/null; then
-        exec_cmd pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
-    elif hash apt 2>/dev/null; then
-        # Para Kali, Parrot, Ubuntu y otros sistemas basados en Debian
-        exec_cmd apt-get install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
-    else
-        print_msg "\n${redColour}${rev} The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
-    fi
 }
 
 # Función para configurar el entorno de Spotify
@@ -740,9 +717,6 @@ function clean_bspwm() {
 
     elif hash apt 2>/dev/null; then
 
-        # Actualizar repositorios en Debian
-        exec_cmd apt update -y 
-
         # Reconfigurar paquetes rotos
         exec_cmd dpkg --configure -a 
 
@@ -753,26 +727,20 @@ function clean_bspwm() {
         exec_cmd apt-get install --reinstall "${APT_FLAGS[@]}" parrot-apps-basics 
 
         # Marcar paquetes como manuales
-        exec_cmd apt-mark manual parrot-apps-basics neovim bspwm sxhdx picom kitty polybar &>/dev/null # sirve para que `autoremove` no los borre.
-        exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null   # evitar que se actualicen/cambien de versión.
-
-        # Actualizar sistema completamente
-        exec_cmd apt -y --fix-broken --fix-missing full-upgrade
-        exec_cmd apt -y full-upgrade
-
-        # Eliminar paquetes innecesarios
-        exec_cmd apt autoremove -y
+        exec_cmd apt-mark manual parrot-apps-basics neovim bspwm sxhkd picom kitty polybar &>/dev/null # sirve para que `autoremove` no los borre.
+        
+        # evitar que se actualicen/cambien de versión.
+        exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null  
 
         # Limpiar caché
         exec_cmd apt-get clean
-        exec_cmd apt autoclean
+        print_msg "\n${yellowColour}${rev}[!] To update your system later!${endColour}"
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
     
     # Actualizar base de datos de locate
     print_msg "\n\t${cianColour}${rev}[!] Updating the locate database please have patience. ${endColour}" 
-    exec_cmd updatedb
 }
 
 # Función para cerrar sesión y reiniciar el sistema
@@ -800,14 +768,12 @@ function shutdown_session(){
 # Inicializar contador de parámetros
 declare -i parameter_counter=0
 Mode=""
-latex=false
 spotify=false
 
 OPTERR=0
-while getopts "d:lsmh" arg; do
+while getopts "d:smh" arg; do
     case "$arg" in
         d) Mode="${OPTARG}"; let parameter_counter+=1 ;;
-        l) latex=true ;;
         s) spotify=true ;;
         m) MUTE_MODE=true ;;
         h) print_msg "${redColour}${rev}Menu de ayuda. ${endColour}"; helpPanel ;; 
@@ -845,11 +811,6 @@ if [[ "$Mode" == "debian" ]]; then
     check_os
     bspwm_enviroment 
 
-    # Instalar Latex si se solicitó
-    if [[ "$latex" == true ]]; then
-        latex_env
-    fi
-
     # Instalar Spotify si se solicitó
     if [[ "$spotify" == true ]]; then
         spotify_env
@@ -864,11 +825,6 @@ elif [[ "$Mode" == "archlinux" ]]; then
     check_disk_space
     check_os
     bspwm_enviroment 
-
-    # Instalar Latex si se solicitó
-    if [[ "$latex" == true ]]; then
-        latex_env
-    fi
 
     # Instalar Spotify si se solicitó
     if [[ "$spotify" == true ]]; then
