@@ -443,14 +443,6 @@ function bspwm_enviroment() {
     exec_cmd sudo -u "${REAL_USER}" git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${USER_HOME}/powerlevel10k"
     exec_cmd git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/powerlevel10k
 
-    # Copia wallpapers al directorio Pictures del usuario
-    print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
-    cd "${INSTALL_DIR}" || exit 1
-    
-    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
-
     # Instala plugin sudo para zsh
     print_msg "${greenColour}${rev} Install plugin sudo. ${endColour}"
     mkdir /usr/share/zsh-sudo
@@ -508,14 +500,33 @@ function bspwm_enviroment() {
     # Copia configuraciones del tema polybar
     print_msg "${greenColour}${rev} Move files configuration. ${endColour}"
     sleep 2
-    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/" "${USER_HOME}/.config/polybar/"
+    
+   # Copia wallpapers al directorio Pictures del usuario
+    print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
+    cd "${INSTALL_DIR}" || exit 1
+    
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
+    
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
 
     # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/bspwm/" "${USER_HOME}/.config/"
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/" "${USER_HOME}/.config/"
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/picom/" "${USER_HOME}/.config/"
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/kitty/" "${USER_HOME}/.config/"
-    exec_cmd sudo -u "${REAL_USER}" cp -r "${INSTALL_DIR}/Entorno-BSPWM/rofi/" "${USER_HOME}/.config/"
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/bspwm/." "${USER_HOME}/.config/bspwm/"
+
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/sxhkd"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/." "${USER_HOME}/.config/sxhkd/"
+
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/picom"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/picom/." "${USER_HOME}/.config/picom/"
+
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/kitty"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/kitty/." "${USER_HOME}/.config/kitty/"
+
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/rofi"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/rofi/." "${USER_HOME}/.config/rofi/"
+
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
 
     # Da permisos de ejecución a archivos de configuración
@@ -542,7 +553,7 @@ function bspwm_enviroment() {
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
         # Leer respuesta del usuario  ${greenColour}${rev} Install fzf. ${endColour}"
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${cianColour}Emili's${endColour} ${orangeColour}BSPWM environment${endColour} ")" entorno
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${cianColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
         case "${entorno,,}" in 
             # Opción sí
             y|yes|yey)
