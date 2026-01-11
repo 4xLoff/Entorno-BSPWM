@@ -65,8 +65,6 @@ fi
 
 [[ -f /etc/needrestart/notify.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
 
-
-
 # Flags para apt-get que fuerzan respuestas automáticas y evitan prompts
 APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confnew")
 
@@ -245,7 +243,7 @@ function check_os() {
         libgl1-mesa-dev libpixman-1-dev kitty rofi 
         suckless-tools feh scrot flameshot dunst caja 
         ranger lxappearance xdo xdotool wmctrl xclip 
-        fontconfig bd bc seclists locate neofetch)
+        fontconfig bd bc seclists locate snapd)
 
         for package in "${packages_bspwm_debian[@]}"; do
             if exec_cmd dpkg -l "${package}" 2>/dev/null | grep -q "^ii"; then
@@ -287,7 +285,6 @@ function check_os() {
         exec_cmd cmake ..
         exec_cmd make -j$(nproc)
         exec_cmd make install
-        
 
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
@@ -508,25 +505,21 @@ function bspwm_enviroment() {
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
-    
+    exec_cmd sudo -u "${REAL_USER}" rm -rf "${USER_HOME}/.config/polybar"
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
 
     # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/bspwm/." "${USER_HOME}/.config/bspwm/"
-
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/sxhkd"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/sxhkd/." "${USER_HOME}/.config/sxhkd/"
-
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/picom"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/picom/." "${USER_HOME}/.config/picom/"
-
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/kitty"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/kitty/." "${USER_HOME}/.config/kitty/"
-
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/rofi"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/rofi/." "${USER_HOME}/.config/rofi/"
-
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/.p10k.zsh" "${USER_HOME}/.p10k.zsh"
 
     # Da permisos de ejecución a archivos de configuración
@@ -549,12 +542,15 @@ function bspwm_enviroment() {
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
+    
     stop_spinner
+    
     # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
     while true; do
         # Leer respuesta del usuario  ${greenColour}${rev} Install fzf. ${endColour}"
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${cianColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${readColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
         case "${entorno,,}" in 
+        
             # Opción sí
             y|yes|yey)
                 # Mensaje de instalación
@@ -668,8 +664,9 @@ function spotify_env(){
 
     # Copiar configuración personalizada de módulos
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/user_modules-copia.ini" "${USER_HOME}/.config/polybar/forest/user_modules.ini"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/forest/config.ini" "${USER_HOME}/.config/polybar/forest/config.ini.old2"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/.config/polybar/forest/config.ini.old" "${USER_HOME}/.config/polybar/forest/config.ini"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini" "${USER_HOME}/.config/polybar/forest/config.ini.old2"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}/Entorno-BSPWM/polybar/forest/config.ini.old" "${USER_HOME}/.config/polybar/forest/config.ini"
+
     # Mensaje de instalación
     print_msg "${greenColour}${rev} Install Spotify. ${endColour}"
     
@@ -692,7 +689,10 @@ function spotify_env(){
 
         # Agregar repositorio de Spotify
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list &>/dev/null
-        exec_cmd snap install spotify
+        exec_cmd systemctl enable --now snapd 2>/dev/null
+
+        exec_cmd snap install spotify 2>/dev/null
+        sudo systemctl enable --now snapd
         exec_cmd apt-get update
     else
         print_msg "\n${redColour}${rev}The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
@@ -790,6 +790,7 @@ function shutdown_session(){
     sleep 5
     
     stop_spinner
+    
     # Eliminar directorio de instalación si existe
     [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}" 2>/dev/null
     # Reiniciar sistema
