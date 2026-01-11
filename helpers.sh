@@ -447,9 +447,9 @@ function bspwm_enviroment() {
     print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
     
-    sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
-    cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
-    cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
+    exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
+    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
 
     # Instala plugin sudo para zsh
     print_msg "${greenColour}${rev} Install plugin sudo. ${endColour}"
@@ -507,6 +507,7 @@ function bspwm_enviroment() {
 
     # Copia configuraciones del tema polybar
     print_msg "${greenColour}${rev} Move files configuration. ${endColour}"
+    sleep 2
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/" "${USER_HOME}/.config/polybar/"
 
     # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
