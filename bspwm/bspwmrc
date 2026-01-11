@@ -43,7 +43,7 @@
 # ============================================
 # POLYBAR THEMES DISPONIBLES
 # ============================================
-# Uso: launch.sh --theme
+# Uso: launch2.sh --theme
 #
 # Temas disponibles:
 #   --blocks        --colorblocks    --cuts       --docky
