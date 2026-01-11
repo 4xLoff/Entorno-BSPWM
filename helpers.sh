@@ -103,7 +103,6 @@ stop_spinner() {
     if [[ -n "$spinner_pid" ]]; then 
         kill $spinner_pid 2>/dev/null 
         wait $spinner_pid 2>/dev/null 
-        printf "\r${greenColour}[*]${endColour}${cianColour} Done${endColour}\n" 
         tput cnorm 
         unset spinner_pid 
     fi 
@@ -204,7 +203,7 @@ function check_os() {
 
     # Al principio del script (después de check_sudo)
     while true; do
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${blueColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment ?${endColour} ")" entorno
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${redColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
         
         case "${entorno,,}" in 
             y|yes|yey)
@@ -225,7 +224,7 @@ function check_os() {
     start_spinner
     if hash apt 2>/dev/null; then
         print_msg "\n${greenColour}${grisBg}${bold} The system is Debian. ${endColour}"
-        print_msg "\n${yellowColour}${rev} Installing only the bspwm environment for Debian. ${endColour}\n"
+        print_msg "\n${yellowColour}${rev}  Installing only the bspwm environment for Debian. ${endColour}\n"
 
         # Remueve versiones conflictivas de codium y neovim
         exec_cmd apt-get remove --purge codium -y
@@ -363,7 +362,7 @@ function check_os() {
         done
 
         # Clona y compila bspwm y sxhkd desde source
-        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
+        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
@@ -521,7 +520,7 @@ function bspwm_enviroment() {
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
-    exec_cmd sudo -u "${REAL_USER}" rm -rf "${USER_HOME}/.config/polybar"
+    exec_cmd rm -rf "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
 
@@ -603,7 +602,7 @@ function bspwm_enviroment() {
     chown "${REAL_USER}:${REAL_USER}" "/root/.local" -R
 
     # Instalación de Visual Studio Code
-    print_msg "${greenColour}${rev} Install Visual Studio Code. ${endColour}"
+    print_msg "${greenColour}${rev}Install Visual Studio Code. ${endColour}"
     exec_cmd curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
     exec_cmd dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
 
