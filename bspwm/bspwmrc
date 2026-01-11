@@ -56,7 +56,7 @@
 # ============================================
 # --- Polybar ---
 # Lanzar la barra de estado
-~/.config/polybar/launch.sh --forest
+~/.config/polybar/launch2.sh --forest
 
 # --- Compositor (Picom) ---
 # Compositor para transparencias y efectos visuales
