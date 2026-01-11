@@ -293,13 +293,6 @@ function check_os() {
     elif hash pacman 2>/dev/null; then
         print_msg "\n${blueColour}${grisBg}${bold} The system is Arch Linux. ${endColour}"
         
-        # Pantalla completa
-        exec_cmd print_msg "${greenColour}${rev}[*] Pantalla completa ${endColour}"
-        exec_cmd modprobe -a vboxguest vboxsf vboxvideo
-        # 3. Habilitar servicio sudo 
-        exec_cmd systemctl enable vboxservice.service 
-        exec_cmd systemctl start vboxservice.service
-        
         echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
         chmod 440 /etc/sudoers.d/axel-aur
         
