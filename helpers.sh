@@ -197,7 +197,7 @@ function check_os() {
     if (( ${#ENTORNOS[@]} > 0 )); then
         for dir in "${ENTORNOS[@]}"; do
             sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
-            print_msg "\n${magentaColour}${rev}[!] The directory was moved successfully. ${endColour}"
+            print_msg "\n${magentaColour}${rev} [!] The directory was moved successfully. ${endColour}\n"
         done
     fi
 
@@ -270,8 +270,8 @@ function check_os() {
                 print_msg "${yellowColour}${rev} Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
             fi
         done 
-
-        print_msg "${greenColour}${rev}[*]   Install bspwm and sxhkd. ${endColour}"
+        
+        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
 
         # Clona los repositorios de bspwm y sxhkd
@@ -362,7 +362,7 @@ function check_os() {
         done
 
         # Clona y compila bspwm y sxhkd desde source
-        print_msg "${greenColour}${rev}[*]   Install bspwm and sxhkd. ${endColour}"
+        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
@@ -685,15 +685,8 @@ function clean_bspwm() {
         exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch spotify --noconfirm
         rm -f /etc/sudoers.d/axel-aur
 
-        # Actualiza sistema
-        exec_cmd pacman -Syu --overwrite '*' --noconfirm
-
-        
         # Limpiar caché de pacman
         exec_cmd pacman -Scc --noconfirm
-
-        # Actualizar sistema
-        exec_cmd pacman -Syu --noconfirm
 
         # Eliminar dependencias huérfanas
         orphans=$(pacman -Qdtq 2>/dev/null) 
