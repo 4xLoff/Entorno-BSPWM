@@ -134,10 +134,10 @@ check_sudo() {
         [ "${PARENT_PROCESS}" = "sudo" ] && \
         [ "${REAL_USER}" != "root" ]; then
        
-        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress\n${endColour}"
+        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
         
     else
-        print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution\n${endColour}"
+        print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution${endColour}"
         helpPanel
     fi
 }
@@ -197,7 +197,7 @@ function check_os() {
     if (( ${#ENTORNOS[@]} > 0 )); then
         for dir in "${ENTORNOS[@]}"; do
             sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
-            print_msg "\n${magentaColour}${rev} [!] The directory was moved successfully. ${endColour}\n"
+            print_msg "\n${magentaColour}${rev}[!] The directory was moved successfully. ${endColour}"
         done
     fi
 
@@ -270,8 +270,8 @@ function check_os() {
                 print_msg "${yellowColour}${rev} Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
             fi
         done 
-        
-        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
+
+        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
 
         # Clona los repositorios de bspwm y sxhkd
@@ -516,12 +516,13 @@ function bspwm_enviroment() {
    # Copia wallpapers al directorio Pictures del usuario
     print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
+    
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
     exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
     exec_cmd rm -rf "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/polybar"
-    exec_cmd sudo -u "${REAL_USER}" cp -af "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
 
     # Copia configuraciones de bspwm, sxhkd, picom, kitty, rofi
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm"
@@ -557,17 +558,20 @@ function bspwm_enviroment() {
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
     
+    stop_spinner
+    
 	 # Aplicar tema según elección
 	 if [[ "$THEME_CHOICE" == "s4vitar" ]]; then
-	     print_msg "${greenColour}${rev} Set s4vitar's themes.${endColour}"
+	     print_msg "${greenColour}${rev}[*] Set s4vitar's themes.${endColour}"
 	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 	 else
-	     print_msg "${greenColour}${rev} Set Emili's themes.${endColour}"
+	     print_msg "${greenColour}${rev}[*] Set Emili's themes.${endColour}"
 	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 	 fi
 
+	 start_spinner
     # Permisos de ejecución para launcher
-    chmod +x "${USER_HOME}/.config/polybar/launch2.sh"
+    chmod +x "${USER_HOME}/.config/polybar/launch.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
@@ -598,7 +602,7 @@ function bspwm_enviroment() {
     chown "${REAL_USER}:${REAL_USER}" "/root/.local" -R
 
     # Instalación de Visual Studio Code
-    print_msg "${greenColour}${rev} Install Visual Studio Code. ${endColour}"
+    print_msg "${greenColour}${rev}Install Visual Studio Code. ${endColour}"
     exec_cmd curl -s "https://vscode.download.prss.microsoft.com/dbazure/download/stable/d78a74bcdfad14d5d3b1b782f87255d802b57511/code_1.94.0-1727878498_amd64.deb" -o code_1.94.0-1727878498_amd64.deb
     exec_cmd dpkg -i --force-confnew code_1.94.0-1727878498_amd64.deb
 
@@ -616,7 +620,7 @@ function bspwm_enviroment() {
     ln -s -f "/opt/fastTCPscan" "/usr/local/bin/fastTCPscan"
 
     # Install whichSystem
-    print_msg "${greenColour}${rev}[*]  Install whichSystem. ${endColour}"
+    print_msg "${greenColour}${rev} Install whichSystem. ${endColour}"
     mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
@@ -685,8 +689,15 @@ function clean_bspwm() {
         exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch spotify --noconfirm
         rm -f /etc/sudoers.d/axel-aur
 
+        # Actualiza sistema
+        exec_cmd pacman -Syu --overwrite '*' --noconfirm
+
+        
         # Limpiar caché de pacman
         exec_cmd pacman -Scc --noconfirm
+
+        # Actualizar sistema
+        exec_cmd pacman -Syu --noconfirm
 
         # Eliminar dependencias huérfanas
         orphans=$(pacman -Qdtq 2>/dev/null) 
@@ -733,7 +744,7 @@ function clean_bspwm() {
 
 # Función para cerrar sesión y reiniciar el sistema
 function shutdown_session(){
-    print_msg "\n\t${cianColour}${rev}[!] We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
+    print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
     
     if hash pacman 2>/dev/null; then
         exec_cmd systemctl enable --now cronie.service 2>/dev/null 
