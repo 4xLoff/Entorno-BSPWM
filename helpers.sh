@@ -258,7 +258,7 @@ function check_os() {
         libgl1-mesa-dev libpixman-1-dev kitty rofi 
         suckless-tools feh scrot flameshot dunst caja 
         ranger lxappearance xdo xdotool wmctrl xclip 
-        fontconfig bd bc seclists locate snapd)
+        fontconfig bd bc seclists locate snapd neofetch)
 
         for package in "${packages_bspwm_debian[@]}"; do
             if exec_cmd dpkg -s "${package}" 2>/dev/null; then
@@ -719,13 +719,23 @@ function clean_bspwm() {
         
         # evitar que se actualicen/cambien de versión.
         exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null  
+        
+        # Actualizar sistema completamente
+        exec_cmd apt -y --fix-broken --fix-missing full-upgrade
+        exec_cmd apt -y full-upgrade
+
+        # Eliminar paquetes innecesarios
+        exec_cmd apt autoremove -y
 
         # Limpiar caché
         exec_cmd apt-get clean
+        exec_cmd apt autoclean
         print_msg "\n${yellowColour}${rev}[!] To update your system later!${endColour}"
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
+    # Actualizar base de datos de locate
+    exec_cmd updatedb
 }
 
 # Función para cerrar sesión y reiniciar el sistema
