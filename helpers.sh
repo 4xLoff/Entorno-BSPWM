@@ -51,7 +51,7 @@ DEBIAN_FRONTEND="noninteractive"
 DEBIAN_PRIORITY="critical"
 DEBCONF_NOWARNINGS="yes"
 export DEBIAN_FRONTEND DEBIAN_PRIORITY DEBCONF_NOWARNINGS
-export UCF_FORCE_CONFFNEW=YES
+export UCF_FORCE_CONFFNEW=1
 
 # Controla si el output de comandos se muestra o no
 MUTE_MODE=false
@@ -66,10 +66,9 @@ fi
 [[ -f /etc/needrestart/notify.conf ]] && sed -i "s/#NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/NR_NOTIFYD_DISABLE_NOTIFY_SEND='1'/" /etc/needrestart/notify.conf &>/dev/null
 
 # Flags para apt-get que fuerzan respuestas automáticas y evitan prompts
-APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confnew")
+APT_FLAGS=(-yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew")
 
 # Función wrapper para ejecutar comandos respetando el modo mute
-# Si MUTE_MODE es true, redirige todo a /dev/null
 exec_cmd() {
     if [[ "$MUTE_MODE" == true ]]; then
         "$@" &>/dev/null
@@ -104,7 +103,6 @@ stop_spinner() {
     if [[ -n "$spinner_pid" ]]; then 
         kill $spinner_pid 2>/dev/null 
         wait $spinner_pid 2>/dev/null 
-        printf "\r${greenColour}[*]${endColour}${cianColour} Done${endColour}\n" 
         tput cnorm 
         unset spinner_pid 
     fi 
@@ -112,17 +110,16 @@ stop_spinner() {
 
 # Muestra el panel de ayuda con las opciones disponibles
 helpPanel() {
-    print_msg "\n${greenColour}${rev}[!] Uso: sudo bash $0 -d {Mode} [-l] [-s] [-m]${endColour}\n"
+    print_msg "\n${greenColour}${rev}[!] Uso: sudo bash $0 -d {Mode} [-s] [-m]${endColour}\n"
     print_msg "\t${blueColour}${rev}[-d] Mode of installation.${endColour}"
     print_msg "\t\t${magentaColour}${grisBg}${bold}debian${endColour}\t\t\t${yellowColour}${rev}Distribution Debian nesesary =< 60 gb.${endColour}"
     print_msg "\t\t${cianColour}${grisBg}${bold}archlinux${endColour}\t\t${yellowColour}${rev}Distribution Archlinux nesesary =< 60 gb.${endColour}"
     print_msg "\t${blueColour}${rev}Opcionales:${endColour}"
-    print_msg "\t\t${magentaColour}${rev}[-l]${endColour}\t\t\t${greenColour}${rev}LaTeX environment (Only for more than 90 gb)${endColour}"
     print_msg "\t\t${cianColour}${rev}[-s]${endColour}\t\t\t${greenColour}${rev}Spotify (Only for more than 16 gb RAM)${endColour}"
     print_msg "\t\t${magentaColour}${rev}[-m]${endColour}\t\t\t${greenColour}${rev}Mode silence (mute)${endColour}"
     print_msg "\t${redColour}${rev}[-h] Show this help panel.${endColour}"
     print_msg "\n${greenColour}${rev}Example:${endColour}"
-    print_msg "\t${greenColour}${bold}sudo bash $0 -d debian -l -s -m${endColour}"
+    print_msg "\t${greenColour}${bold}sudo bash $0 -d debian -s -m${endColour}"
     tput cnorm
     exit 1
 }
@@ -137,10 +134,10 @@ check_sudo() {
         [ "${PARENT_PROCESS}" = "sudo" ] && \
         [ "${REAL_USER}" != "root" ]; then
        
-        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress${endColour}"
+        print_msg "\n${greenColour}${grisBg}${bold} Allowed: ${endColour}${greenColour}${rev}[*] Execution in progress\n${endColour}"
         
     else
-        print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution${endColour}"
+        print_msg "\n${redColour}${grisBg}${bold}[x] Blocked: ${endColour}${redColour}${rev}[x] Unauthorized execution\n${endColour}"
         helpPanel
     fi
 }
@@ -157,10 +154,7 @@ ctrl_c() {
         
         # Limpia el directorio de instalación antes d.e salir
         [[ -d "${INSTALL_DIR}" && "${INSTALL_DIR}" != "/" ]] && rm -rf "${INSTALL_DIR}" 2>/dev/null
-        
         rm -f /etc/sudoers.d/axel-aur
-        
-        set +e
         tput cnorm
         exit 1
     fi
@@ -203,19 +197,40 @@ function check_os() {
     if (( ${#ENTORNOS[@]} > 0 )); then
         for dir in "${ENTORNOS[@]}"; do
             sudo -u "${REAL_USER}" mv "$dir" "${INSTALL_DIR}/"
-            print_msg "\n${magentaColour}${rev}[!] The directory was moved successfully. ${endColour}"
+            print_msg "\n${magentaColour}${rev} [!] The directory was moved successfully. ${endColour}\n"
         done
     fi
+
+    # Al principio del script (después de check_sudo)
+    while true; do
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${redColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
+        
+        case "${entorno,,}" in 
+            y|yes|yey)
+                THEME_CHOICE="s4vitar"
+                break
+                ;;
+            ""|n|no|nay)
+                THEME_CHOICE="emili"
+                break
+                ;;
+            *)
+                print_msg "\n${redColour}${rev}[x] Invalid option. Please try again.${endColour}\n"
+                ;;
+        esac
+    done
 
     # Instalación para sistemas basados en Debian
     start_spinner
     if hash apt 2>/dev/null; then
         print_msg "\n${greenColour}${grisBg}${bold} The system is Debian. ${endColour}"
-        print_msg "\n${yellowColour}${rev} Installing only the bspwm environment for Debian. ${endColour}\n"
+        print_msg "\n${yellowColour}${rev}  Installing only the bspwm environment for Debian. ${endColour}\n"
 
         # Remueve versiones conflictivas de codium y neovim
         exec_cmd apt-get remove --purge codium -y
         exec_cmd apt-get remove --purge neovim -y
+        exec_cmd rm /usr/share/applications/nvim.desktop
+        exec_cmd rm /usr/share/applications/vim.desktop
         exec_cmd apt update -y
 
         # Array de paquetes necesarios para BSPWM en Debian
@@ -246,7 +261,7 @@ function check_os() {
         fontconfig bd bc seclists locate snapd)
 
         for package in "${packages_bspwm_debian[@]}"; do
-            if exec_cmd dpkg -l "${package}" 2>/dev/null | grep -q "^ii"; then
+            if exec_cmd dpkg -s "${package}" 2>/dev/null; then
                 print_msg "${blueColour}${rev} Package => ${endColour}${blueColour}${grisBg}${bold} ${package} ${endColour}${blueColour}${rev}Already installed (skipped). ${endColour}"
                 continue
             elif exec_cmd apt-get install "${APT_FLAGS[@]}" "${package}"; then
@@ -255,11 +270,10 @@ function check_os() {
                 print_msg "${yellowColour}${rev} Package => ${endColour}${yellowColour}${grisBg}${bold} ${package} ${endColour}${yellowColour}${rev}failed. ${endColour}"
             fi
         done 
-
-        print_msg "${greenColour}${rev} Install bspwm and sxhkd. ${endColour}"
-        cd "${INSTALL_DIR}" || exit 1
-
+        
         # Clona los repositorios de bspwm y sxhkd
+        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
+        cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git 
 
@@ -273,9 +287,9 @@ function check_os() {
         exec_cmd make
         exec_cmd make install 
 
+        # Clona polybar con submódulos recursivos
         print_msg "${greenColour}${rev} Polybar compilation please have patience. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
-        # Clona polybar con submódulos recursivos
         exec_cmd sudo -u "${REAL_USER}" git clone --recursive https://github.com/polybar/polybar
         cd polybar/
         mkdir build
@@ -289,7 +303,6 @@ function check_os() {
         # Instalación para Arch Linux
     elif hash pacman 2>/dev/null; then
         print_msg "\n${blueColour}${grisBg}${bold} The system is Arch Linux. ${endColour}"
-        
         echo "${REAL_USER} ALL=(ALL) NOPASSWD: /usr/bin/pacman" | tee /etc/sudoers.d/axel-aur > /dev/null 2>&1
         chmod 440 /etc/sudoers.d/axel-aur
         
@@ -314,9 +327,9 @@ function check_os() {
         cd "${INSTALL_DIR}/yay"
         exec_cmd sudo -u "${REAL_USER}" makepkg -si --noconfirm
         
+        # Array de paquetes necesarios para BSPWM en Arch
         print_msg "\n${yellowColour}${rev} Installing only the bspwm environment for Arch Linux. ${endColour}\n"
 
-        # Array de paquetes necesarios para BSPWM en Arch
         packages_bspwm_arch=(
         base-devel curl wget cmake dpkg net-tools rsync
         plocate gnome meson ninja bspwm sxhkd polybar kmod
@@ -347,7 +360,7 @@ function check_os() {
         done
 
         # Clona y compila bspwm y sxhkd desde source
-        print_msg "${greenColour}${rev}[*] Install bspwm and sxhkd. ${endColour}"
+        print_msg "${greenColour}${rev}[*]  Install bspwm and sxhkd. ${endColour}"
         cd "${INSTALL_DIR}" || exit 1
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/bspwm.git
         exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/baskerville/sxhkd.git
@@ -409,7 +422,7 @@ function bspwm_enviroment() {
     cd "${INSTALL_DIR}/blue-sky/polybar/fonts"
     mkdir -p /usr/share/fonts/truetype
     cp * /usr/share/fonts/truetype/
-    pushd /usr/share/fonts/truetype/ >/dev/null 2>&1   # `&>` es **atajo específico de bash** (y zsh); no es POSIX.
+    pushd /usr/share/fonts/truetype/ >/dev/null 2>&1   # `&>` es **atajo específico de bash** (y zsh); no es POSIX.
     exec_cmd fc-cache -v
     popd &>/dev/null 
     
@@ -496,16 +509,15 @@ function bspwm_enviroment() {
 
     # Copia configuraciones del tema polybar
     print_msg "${greenColour}${rev} Move files configuration. ${endColour}"
-    sleep 2
     
    # Copia wallpapers al directorio Pictures del usuario
     print_msg "${greenColour}${rev} Configuration wallpaper. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
-    
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/bspwm/Pictures"
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.png "${USER_HOME}/.config/bspwm/Pictures" 
-    exec_cmd sudo -u "${REAL_USER}" cp "${INSTALL_DIR}"/Entorno-BSPWM/bspwm/Pictures/*.gif "${USER_HOME}/.config/bspwm/Pictures"
-    exec_cmd sudo -u "${REAL_USER}" rm -rf "${USER_HOME}/.config/polybar"
+    exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/bspwm/Pictures/." "${USER_HOME}/.config/bspwm/Pictures/" || true
+
+    # Wipe y copia polybar (borrar como root, crear y copiar como usuario)
+    exec_cmd rm -rf "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" mkdir -p "${USER_HOME}/.config/polybar"
     exec_cmd sudo -u "${REAL_USER}" cp -a "${INSTALL_DIR}/Entorno-BSPWM/polybar/." "${USER_HOME}/.config/polybar/"
 
@@ -543,43 +555,19 @@ function bspwm_enviroment() {
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux${endColour}"
     fi
     
-    stop_spinner
-    
-    # Bucle para preguntar si se instala el entorno BSPWM de s4vitar
-    while true; do
-        # Leer respuesta del usuario  ${greenColour}${rev} Install fzf. ${endColour}"
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${readColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
-        case "${entorno,,}" in 
-        
-            # Opción sí
-            y|yes|yey)
-                # Mensaje de instalación
-                print_msg "${greenColour}${rev}[*] Set s4vitar's themes. ${endColour}"
-                # Cambiar script de lanzamiento de polybar en bspwm
-                exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-                break
-                ;;
+	 # Aplicar tema según elección
+	 if [[ "$THEME_CHOICE" == "s4vitar" ]]; then
+	     print_msg "${greenColour}${rev} Set s4vitar's themes.${endColour}"
+	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+	 else
+	     print_msg "${greenColour}${rev} Set Emili's themes.${endColour}"
+	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
+	 fi
 
-            # Opción no o enter
-            ""|n|no|nay)
-                print_msg "${greenColour}${rev}[*] Set Emili's themes. ${endColour}"
-                # Copiar configuración de polybar forest
-                exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
-                break
-                ;;
-
-              # Opción inválida
-            *)
-                print_msg "\n${redColour}${rev}[x] That option is invalid please enter a valid option. ${endColour}\n" 
-                continue
-                ;;
-        esac
-    done
-
-	 start_spinner
     # Permisos de ejecución para launcher
     chmod +x "${USER_HOME}/.config/polybar/launch.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
+    chmod +x "${USER_HOME}/.config/polybar/launch2.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
@@ -592,6 +580,7 @@ function bspwm_enviroment() {
     # Crear archivos temporales usados por polybar
     touch /tmp/{name,target}
     chown "${REAL_USER}:${REAL_USER}" /tmp/{name,target}
+    chown -R "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.config"
 
     # Asignar propietario correcto al archivo
     chown "${REAL_USER}:${REAL_USER}" "${USER_HOME}/.zshrc"
@@ -631,23 +620,6 @@ function bspwm_enviroment() {
     mkdir -p /opt/whichSystem
     cp "${INSTALL_DIR}/Entorno-BSPWM/whichSystem.py" "/opt/whichSystem/whichSystem.py"
     ln -s -f "/opt/whichSystem/whichSystem.py" "/usr/local/bin/"
-}
-
-# Instalar Entorno de LaTeX
-function latex_env(){
-    cd "${INSTALL_DIR}" || exit 1
-    exec_cmd wget -q https://github.com/obsidianmd/obsidian-releases/releases/download/v1.10.3/obsidian_1.10.3_amd64.deb
-    exec_cmd dpkg -i obsidian_1.10.3_amd64.deb
-    print_msg "${greenColour}${rev} The latex environment will be installed, this will take more than 30 minutes approximately. ${endColour}"
-        
-    if hash pacman 2>/dev/null; then
-        exec_cmd pacman -S --needed --noconfirm texlive-most zathura zathura-pdf-poppler
-    elif hash apt 2>/dev/null; then
-        # Para Kali, Parrot, Ubuntu y otros sistemas basados en Debian
-        exec_cmd apt-get install latexmk zathura rubber texlive texlive-latex-extra texlive-fonts-recommended -y --fix-missing # texlive-full
-    else
-        print_msg "\n${redColour}${rev} The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
-    fi
 }
 
 # Función para configurar el entorno de Spotify
@@ -713,15 +685,8 @@ function clean_bspwm() {
         exec_cmd sudo -u "${REAL_USER}" yay -S  rofi-greenclip neofetch spotify --noconfirm
         rm -f /etc/sudoers.d/axel-aur
 
-        # Actualiza sistema
-        exec_cmd pacman -Syu --overwrite '*' --noconfirm
-
-        
         # Limpiar caché de pacman
         exec_cmd pacman -Scc --noconfirm
-
-        # Actualizar sistema
-        exec_cmd pacman -Syu --noconfirm
 
         # Eliminar dependencias huérfanas
         orphans=$(pacman -Qdtq 2>/dev/null) 
@@ -740,9 +705,6 @@ function clean_bspwm() {
 
     elif hash apt 2>/dev/null; then
 
-        # Actualizar repositorios en Debian
-        exec_cmd apt update -y 
-
         # Reconfigurar paquetes rotos
         exec_cmd dpkg --configure -a 
 
@@ -753,31 +715,22 @@ function clean_bspwm() {
         exec_cmd apt-get install --reinstall "${APT_FLAGS[@]}" parrot-apps-basics 
 
         # Marcar paquetes como manuales
-        exec_cmd apt-mark manual parrot-apps-basics neovim bspwm sxhdx picom kitty polybar &>/dev/null # sirve para que `autoremove` no los borre.
-        exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null   # evitar que se actualicen/cambien de versión.
-
-        # Actualizar sistema completamente
-        exec_cmd apt -y --fix-broken --fix-missing full-upgrade
-        exec_cmd apt -y full-upgrade
-
-        # Eliminar paquetes innecesarios
-        exec_cmd apt autoremove -y
+        exec_cmd apt-mark manual parrot-apps-basics neovim bspwm sxhkd picom kitty polybar &>/dev/null # sirve para que `autoremove` no los borre.
+        
+        # evitar que se actualicen/cambien de versión.
+        exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null  
 
         # Limpiar caché
         exec_cmd apt-get clean
-        exec_cmd apt autoclean
+        print_msg "\n${yellowColour}${rev}[!] To update your system later!${endColour}"
     else
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
-    
-    # Actualizar base de datos de locate
-    print_msg "\n\t${cianColour}${rev}[!] Updating the locate database please have patience. ${endColour}" 
-    exec_cmd updatedb
 }
 
 # Función para cerrar sesión y reiniciar el sistema
 function shutdown_session(){
-    print_msg "\n\t${cianColour}${rev} We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
+    print_msg "\n\t${cianColour}${rev}[!] We are closing the session to apply the new configuration, be sure to select the BSPWM. ${endColour}" 
     
     if hash pacman 2>/dev/null; then
         exec_cmd systemctl enable --now cronie.service 2>/dev/null 
@@ -800,14 +753,12 @@ function shutdown_session(){
 # Inicializar contador de parámetros
 declare -i parameter_counter=0
 Mode=""
-latex=false
 spotify=false
 
 OPTERR=0
-while getopts "d:lsmh" arg; do
+while getopts "d:smh" arg; do
     case "$arg" in
         d) Mode="${OPTARG}"; let parameter_counter+=1 ;;
-        l) latex=true ;;
         s) spotify=true ;;
         m) MUTE_MODE=true ;;
         h) print_msg "${redColour}${rev}Menu de ayuda. ${endColour}"; helpPanel ;; 
@@ -845,11 +796,6 @@ if [[ "$Mode" == "debian" ]]; then
     check_os
     bspwm_enviroment 
 
-    # Instalar Latex si se solicitó
-    if [[ "$latex" == true ]]; then
-        latex_env
-    fi
-
     # Instalar Spotify si se solicitó
     if [[ "$spotify" == true ]]; then
         spotify_env
@@ -864,11 +810,6 @@ elif [[ "$Mode" == "archlinux" ]]; then
     check_disk_space
     check_os
     bspwm_enviroment 
-
-    # Instalar Latex si se solicitó
-    if [[ "$latex" == true ]]; then
-        latex_env
-    fi
 
     # Instalar Spotify si se solicitó
     if [[ "$spotify" == true ]]; then
