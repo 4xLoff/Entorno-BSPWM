@@ -43,7 +43,7 @@
 # ============================================
 # POLYBAR THEMES DISPONIBLES
 # ============================================
-# Uso: launch2.sh --theme
+# Uso: launch.sh --theme
 #
 # Temas disponibles:
 #   --blocks        --colorblocks    --cuts       --docky
@@ -56,7 +56,7 @@
 # ============================================
 # --- Polybar ---
 # Lanzar la barra de estado
-~/.config/polybar/launch2.sh --forest
+~/.config/polybar/launch.sh --forest
 
 # --- Compositor (Picom) ---
 # Compositor para transparencias y efectos visuales
