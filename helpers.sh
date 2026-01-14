@@ -490,7 +490,7 @@ function bspwm_enviroment() {
     # Instala NvChad para el usuario
     exec_cmd sudo -u "${REAL_USER}" rm -rf "${USER_HOME}/.config/nvim" 
     exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/NvChad/starter "${USER_HOME}/.config/nvim"
-    exec_cmd nvim --headless '+Lazy! sync' +qa
+    exec_cmd sudo -u "${REAL_USER}" nvim --headless '+Lazy! sync' +qa
     line="vim.opt.listchars = { tab = '»·', trail = '.' }"
     sed -i "3i ${line}" "${USER_HOME}/.config/nvim/init.lua"
 
@@ -565,7 +565,7 @@ function bspwm_enviroment() {
 	 fi
 
     # Permisos de ejecución para launcher
-    chmod +x "${USER_HOME}/.config/polybar/launch.sh"
+
     chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch2.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
@@ -658,9 +658,6 @@ function spotify_env(){
         # Instalar playerctl en Debian
         exec_cmd apt-get install playerctl -y
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg &>/dev/null
-
-        # Agregar repositorio de Spotify
-        echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list &>/dev/null
         exec_cmd systemctl enable --now snapd 2>/dev/null
 
         exec_cmd snap install spotify 2>/dev/null
@@ -721,11 +718,11 @@ function clean_bspwm() {
         exec_cmd apt-mark unhold bspwm sxhkd picom polybar &>/dev/null  
         
         # Actualizar sistema completamente
-        exec_cmd apt -y --fix-broken --fix-missing full-upgrade
-        exec_cmd apt -y full-upgrade
+        #exec_cmd apt -y --fix-broken --fix-missing full-upgrade
+        #exec_cmd apt -y full-upgrade
 
         # Eliminar paquetes innecesarios
-        exec_cmd apt autoremove -y
+        #exec_cmd apt autoremove -y
 
         # Limpiar caché
         exec_cmd apt-get clean
@@ -735,7 +732,14 @@ function clean_bspwm() {
         print_msg "\n${redColour}${rev}[x] The system is neither Debian, Ubuntu, nor Arch Linux. ${endColour}"
     fi
     # Actualizar base de datos de locate
-    exec_cmd updatedb
+    
+    # Convertir localmente (usuario real)
+    exec_cmd sudo -u "${REAL_USER}" cp -f "${INSTALL_DIR}/Entorno-BSPWM/polybar/launch.sh" "${USER_HOME}/.config/polybar/launch.sh"
+    exec_cmd dos2unix "${USER_HOME}/.config/polybar/launch.sh" || sed -i 's/\r$//' "${USER_HOME}/.config/polybar/launch.sh"
+    chmod +x "${USER_HOME}/.config/polybar/launch.sh"
+
+
+    #exec_cmd updatedb
 }
 
 # Función para cerrar sesión y reiniciar el sistema
