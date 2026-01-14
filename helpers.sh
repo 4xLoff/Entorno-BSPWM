@@ -203,7 +203,7 @@ function check_os() {
 
     # Al principio del script (después de check_sudo)
     while true; do
-        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${redColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Emili's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
+        read -rp "$(printf "%b" "${orangeColour}[*] Set ${endColour}${redColour}s4vitar's${endColour}${orangeColour} BSPWM environment? ${endColour}${greenColour}${grisBg}${bold}(y|yes|yey)${endColour} or ${greenColour}${grisBg}${bold}(n|no|nay)${endColour} ${orangeColour}for Set ${endColour}${magentaColour}Lana's${endColour} ${orangeColour}BSPWM environment?${endColour} ")" entorno
         
         case "${entorno,,}" in 
             y|yes|yey)
@@ -211,7 +211,7 @@ function check_os() {
                 break
                 ;;
             ""|n|no|nay)
-                THEME_CHOICE="emili"
+                THEME_CHOICE="lana"
                 break
                 ;;
             *)
@@ -560,7 +560,7 @@ function bspwm_enviroment() {
 	     print_msg "${greenColour}${rev} Set s4vitar's themes.${endColour}"
 	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch4.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 	 else
-	     print_msg "${greenColour}${rev} Set Emili's themes.${endColour}"
+	     print_msg "${greenColour}${rev} Set Lana's themes.${endColour}"
 	     exec_cmd sudo -u "${REAL_USER}" sed -i 's|~/.config/polybar/launch\.sh --forest|~/.config/polybar/launch1.sh|g' "${USER_HOME}/.config/bspwm/bspwmrc"
 	 fi
 
@@ -573,9 +573,9 @@ function bspwm_enviroment() {
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
     
     # Permisos para ethernet_status, vpn_status, target_to_hack
-    chmod +x "${USER_HOME}/.config/polybar/emili/scripts/ethernet_status"
-    chmod +x "${USER_HOME}/.config/polybar/emili/scripts/vpn_status"
-    chmod +x "${USER_HOME}/.config/polybar/emili/scripts/target_to_hack"
+    chmod +x "${USER_HOME}/.config/polybar/lana/scripts/ethernet_status"
+    chmod +x "${USER_HOME}/.config/polybar/lana/scripts/vpn_status"
+    chmod +x "${USER_HOME}/.config/polybar/lana/scripts/target_to_hack"
 
     # Crear archivos temporales usados por polybar
     touch /tmp/{name,target}
