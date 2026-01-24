@@ -567,7 +567,6 @@ function bspwm_enviroment() {
     # Permisos de ejecución para launcher
 
     chmod +x "${USER_HOME}/.config/polybar/launch1.sh"
-    chmod +x "${USER_HOME}/.config/polybar/launch2.sh"
     chmod +x "${USER_HOME}/.config/polybar/launch4.sh"
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/launcher.sh"
     chmod +x "${USER_HOME}/.config/polybar/forest/scripts/powermenu.sh"
