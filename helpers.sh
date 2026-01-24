@@ -693,7 +693,7 @@ function clean_bspwm() {
         print_msg "${greenColour}${rev} Enabling services. ${endColour}"
 
         # Configurar teclado
-        exec_cmd localectl set-x11-keymap es 
+        # exec_cmd localectl set-x11-keymap es 
 
         # Habilitar servicios necesarios
         exec_cmd systemctl enable vmtoolsd 2>/dev/null
