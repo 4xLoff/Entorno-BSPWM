@@ -440,6 +440,7 @@ function bspwm_enviroment() {
     # Clona y compila picom (compositor)
     print_msg "${greenColour}${rev} Picom compilation please have patience. ${endColour}"
     cd "${INSTALL_DIR}" || exit 1
+	#exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/yshui/picom.git  # usarlo para debian 13 u otros queno se compile bien el picom
     exec_cmd sudo -u "${REAL_USER}" git clone https://github.com/ibhagwan/picom.git
     cd picom/
     rm -rf build
